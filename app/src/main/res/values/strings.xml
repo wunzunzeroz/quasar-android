@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">QUASAR</string>
+    <string name="title_activity_launch">LaunchActivity</string>
+    <string name="welcome_message">Welcome to QUASAR</string>
+    <string name="login_button">Log in</string>
+    <string name="title_activity_map">MapActivity</string>
 </resources>
