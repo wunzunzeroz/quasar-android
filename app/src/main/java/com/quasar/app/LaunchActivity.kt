@@ -23,6 +23,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.ktx.Firebase
 import com.quasar.app.ui.theme.QUASARTheme
 import kotlinx.coroutines.launch
 
@@ -44,16 +46,27 @@ class LaunchActivity : ComponentActivity() {
                 }
             }
         }
+        // Check if the user is already signed in
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            navigateToMapActivity()
+        }
     }
+
+    private fun navigateToMapActivity() {
+        val intent = Intent(this, MapActivity::class.java)
+        startActivity(intent)
+        finish() // Finish LandingActivity so it's removed from the back stack
+    }
+
     private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
         val response = result.idpResponse
         if (result.resultCode == RESULT_OK) {
             // Successfully signed in, navigate to MapActivity
-            val intent = Intent(this, MapActivity::class.java)
-            startActivity(intent)
-            finish() // Finish LandingActivity so it's removed from the back stack
+            navigateToMapActivity()
         } else {
             // Handle sign-in failure
+            throw Exception("Error logging in")
         }
     }
 }
