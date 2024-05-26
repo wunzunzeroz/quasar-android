@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "669113397182",
+    "project_id": "quasar-platform",
+    "storage_bucket": "quasar-platform.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:669113397182:android:2f814ca6abf7bbe14153ef",
+        "android_client_info": {
+          "package_name": "com.quasar.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "669113397182-jsgf83s92h1a0kqnr1c6434bl1l6k98l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.quasar.app",
+            "certificate_hash": "7dc8e4540ed9f5ae8736b83aa3410c8e6355779a"
+          }
+        },
+        {
+          "client_id": "669113397182-tl4f3vds4fu9t4e0miamp2p8d6oaaraf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDn1_-Mx8GCGCeOdxwlppf5N9WTzv0mxeY"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "669113397182-tl4f3vds4fu9t4e0miamp2p8d6oaaraf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
