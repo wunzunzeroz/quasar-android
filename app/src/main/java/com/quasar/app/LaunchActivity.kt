@@ -23,14 +23,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
+import com.google.firebase.analytics.FirebaseAnalytics
+import com.google.firebase.analytics.ktx.analytics
+import com.google.firebase.analytics.logEvent
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.ktx.Firebase
 import com.quasar.app.ui.theme.QUASARTheme
 import kotlinx.coroutines.launch
 
 class LaunchActivity : ComponentActivity() {
+    private lateinit var firebaseAnalytics: FirebaseAnalytics
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        firebaseAnalytics = Firebase.analytics
 
         val signInLauncher = registerForActivityResult(
             FirebaseAuthUIActivityResultContract()
@@ -62,6 +69,13 @@ class LaunchActivity : ComponentActivity() {
     private fun onSignInResult(result: FirebaseAuthUIAuthenticationResult) {
         val response = result.idpResponse
         if (result.resultCode == RESULT_OK) {
+            val email = response?.email
+            val providerType = response?.providerType
+
+            firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN) {
+                param(FirebaseAnalytics.Param.ITEM_NAME, email ?: "Unknown email")
+                param(FirebaseAnalytics.Param.METHOD, providerType ?: "Unknown provider")
+            }
             // Successfully signed in, navigate to MapActivity
             navigateToMapActivity()
         } else {
@@ -70,6 +84,7 @@ class LaunchActivity : ComponentActivity() {
         }
     }
 }
+
 suspend fun createSignInIntent(signInLauncher: ActivityResultLauncher<Intent>) {
     // Choose authentication providers
     val providers = arrayListOf(
@@ -77,10 +92,8 @@ suspend fun createSignInIntent(signInLauncher: ActivityResultLauncher<Intent>) {
     )
 
     // Create and launch sign-in intent
-    val signInIntent = AuthUI.getInstance()
-        .createSignInIntentBuilder()
-        .setAvailableProviders(providers)
-        .build()
+    val signInIntent =
+        AuthUI.getInstance().createSignInIntentBuilder().setAvailableProviders(providers).build()
     signInLauncher.launch(signInIntent)
 }
 
@@ -111,6 +124,5 @@ fun LaunchScreen(signInLauncher: ActivityResultLauncher<Intent>, modifier: Modif
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview2() {
-    QUASARTheme {
-    }
+    QUASARTheme {}
 }
