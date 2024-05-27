@@ -74,6 +74,11 @@ dependencies {
     implementation("com.firebaseui:firebase-ui-auth:7.2.0")
 
     // Mapbox
-    implementation("com.mapbox.maps:android:11.4.0")
-    implementation("com.mapbox.extension:maps-compose:11.4.0")
+    val mapboxVersion = "11.4.0"
+    implementation("com.mapbox.maps:android:$mapboxVersion")
+    implementation("com.mapbox.extension:maps-compose:$mapboxVersion")
+
+    // Koin
+    val koinVersion = "3.1.2"
+    implementation("io.insert-koin:koin-androidx-compose:$koinVersion")
 }
