@@ -18,9 +18,9 @@
         android:theme="@style/Theme.QUASAR"
         tools:targetApi="31">
         <activity
-            android:name=".LaunchActivity"
+            android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/title_activity_launch"
+            android:label="@string/title_activity_main"
             android:theme="@style/Theme.QUASAR">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,11 +28,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".map.MapActivity"
-            android:exported="false"
-            android:label="@string/title_activity_map"
-            android:theme="@style/Theme.QUASAR" />
     </application>
 
 </manifest>
