@@ -1,5 +1,6 @@
 package com.quasar.app.map
 
+import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -7,6 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -46,6 +48,7 @@ fun MapScreen(navController: NavHostController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        val logTag = "MapScreen"
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
         val ctx = LocalContext.current
@@ -64,27 +67,51 @@ fun MapScreen(navController: NavHostController) {
                     })
             }
         }) {
-            Scaffold(topBar = {
-                TopAppBar(title = { Text(text = "QUASAR") }, navigationIcon = {
-                    IconButton(onClick = {
-                        scope.launch {
-                            drawerState.apply {
-                                if (isClosed) open() else close()
+            Scaffold(
+                topBar = {
+                    TopAppBar(title = { Text(text = "QUASAR") }, navigationIcon = {
+                        IconButton(onClick = {
+                            scope.launch {
+                                drawerState.apply {
+                                    if (isClosed) open() else close()
+                                }
                             }
+                        }) {
+                            Icon(Icons.Filled.Menu, contentDescription = "Menu")
                         }
-                    }) {
-                        Icon(Icons.Filled.Menu, contentDescription = "Menu")
-                    }
-                })
-            }) { contentPadding ->
-                MapboxMap(Modifier.fillMaxSize(), mapViewportState = MapViewportState().apply {
-                    setCameraOptions {
-                        zoom(11.0)
-                        center(Point.fromLngLat(174.831123, -36.833331))
-                        pitch(0.0)
-                        bearing(0.0)
-                    }
-                }, style = { MapStyle(style = Style.OUTDOORS) }) {
+                    })
+                },
+//                bottomBar = {
+//                    BottomAppBar() {
+//                    }
+//                }
+            ) { contentPadding ->
+                MapboxMap(
+                    mapViewportState = MapViewportState().apply {
+                        setCameraOptions {
+                            zoom(11.0)
+                            center(Point.fromLngLat(174.831123, -36.833331))
+                            pitch(0.0)
+                            bearing(0.0)
+                        }
+                    },
+                    onMapClickListener = {
+                        Log.d(
+                            logTag, "User tapped map at Lat/Lng: ${it.latitude()}/${it.longitude()}"
+                        )
+
+                        true
+                    },
+                    onMapLongClickListener = {
+                        Log.d(
+                            logTag, "User long tapped map at Lat/Lng: ${it.latitude()}/${it.longitude()}"
+                        )
+
+                        true
+                    },
+                    style = { MapStyle(style = Style.OUTDOORS) },
+                    modifier = Modifier.fillMaxSize(),
+                ) {
                     MapEffect(Unit) { mapView ->
                         // Use mapView to access all the Mapbox Maps APIs including plugins etc.
                         // For example, to enable debug mode:
