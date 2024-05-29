@@ -7,6 +7,8 @@ import com.quasar.app.map.data.PolygonsRepository
 import com.quasar.app.map.data.PolygonsRepositoryImpl
 import com.quasar.app.map.data.PolylinesRepository
 import com.quasar.app.map.data.PolylinesRepositoryImpl
+import com.quasar.app.map.data.SketchRepository
+import com.quasar.app.map.data.SketchRepositoryImpl
 import com.quasar.app.map.data.WaypointsRepository
 import com.quasar.app.map.data.WaypointsRepositoryImpl
 import com.quasar.app.map.ui.MapViewModel
@@ -29,7 +31,7 @@ class Quasar : Application() {
 val appModule = module {
     // ViewModels
     viewModel {
-        MapViewModel(get(), get(), get(), get())
+        MapViewModel(get(), get(), get(), get(), get())
     }
 
     // Repositories
@@ -37,6 +39,7 @@ val appModule = module {
     single<CirclesRepository> { CirclesRepositoryImpl() }
     single<PolylinesRepository> { PolylinesRepositoryImpl() }
     single<PolygonsRepository> { PolygonsRepositoryImpl() }
+    single<SketchRepository> { SketchRepositoryImpl() }
 
     // DB
 }
