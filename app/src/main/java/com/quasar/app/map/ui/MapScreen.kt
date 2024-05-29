@@ -6,8 +6,14 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.List
+import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,6 +22,9 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarDefaults
+import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -24,6 +33,10 @@ import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -70,33 +83,31 @@ fun MapScreen(navController: NavHostController) {
                     })
             }
         }) {
-            Scaffold(
-                topBar = {
-                    TopAppBar(
-                        title = { Text(text = "QUASAR") },
-                        navigationIcon = {
-                            IconButton(onClick = {
-                                scope.launch {
-                                    drawerState.apply {
-                                        if (isClosed) open() else close()
-                                    }
-                                }
-                            }) {
-                                Icon(Icons.Filled.Menu, contentDescription = "Menu", tint = MaterialTheme.colorScheme.onPrimary)
+            Scaffold(topBar = {
+                // Maybe we don't need the top bar and drawer? Just a search box instead?
+                TopAppBar(title = { Text(text = "QUASAR") }, navigationIcon = {
+                    IconButton(onClick = {
+                        scope.launch {
+                            drawerState.apply {
+                                if (isClosed) open() else close()
                             }
-                        },
-                        colors = TopAppBarDefaults.topAppBarColors(
-                            containerColor = Color.Transparent,
-                            titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                            actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                        }
+                    }) {
+                        Icon(
+                            Icons.Filled.Menu,
+                            contentDescription = "Menu",
+                            tint = MaterialTheme.colorScheme.onPrimary
                         )
-                    )
-                },
-//                bottomBar = {
-//                    BottomAppBar() {
-//                    }
-//                }
-            ) { contentPadding ->
+                    }
+                }, colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                )
+                )
+            }, bottomBar = {
+                BottomBar()
+            }) { contentPadding ->
                 MapboxMap(
                     mapViewportState = MapViewportState().apply {
                         setCameraOptions {
@@ -133,5 +144,37 @@ fun MapScreen(navController: NavHostController) {
             }
         }
 
+    }
+}
+
+@Composable
+fun BottomBar() {
+    NavigationBar() {
+        val selectedItem = remember {
+            mutableIntStateOf(0)
+        }
+
+        val items = listOf(
+            "Map",
+            "Tasks",
+            "Chat",
+            "Teams",
+            "Profile"
+        )
+        val icons = listOf(
+            Icons.Default.Map,
+            Icons.Default.List,
+            Icons.Default.Chat,
+            Icons.Default.Group,
+            Icons.Default.Person
+        )
+        items.forEachIndexed { index, item ->
+            NavigationBarItem(
+                icon = { Icon(icons[index], contentDescription = item) },
+                label = { Text(item) },
+                selected = selectedItem.intValue == index,
+                onClick = { selectedItem.intValue = index },
+            )
+        }
     }
 }
