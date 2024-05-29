@@ -1,4 +1,4 @@
-package com.quasar.app
+package com.quasar.app.auth.ui
 
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -17,9 +17,9 @@ import androidx.navigation.NavHostController
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
-import com.google.firebase.analytics.FirebaseAnalytics
-import com.google.firebase.analytics.logEvent
 import com.google.firebase.auth.FirebaseAuth
+import com.quasar.app.QuasarScreen
+import com.quasar.app.R
 import kotlinx.coroutines.launch
 
 @Composable
