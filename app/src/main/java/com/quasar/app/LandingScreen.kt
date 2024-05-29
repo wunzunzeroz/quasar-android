@@ -19,6 +19,7 @@ import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.logEvent
+import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 
 @Composable
@@ -26,6 +27,11 @@ fun LandingScreen(
     navController: NavHostController, modifier: Modifier = Modifier
 ) {
     val scope = rememberCoroutineScope()
+
+    val userIsLoggedIn = FirebaseAuth.getInstance().currentUser != null
+    if (userIsLoggedIn) {
+        navController.navigate(QuasarScreen.MapScreen.name)
+    }
 
     val signInLauncher =
         rememberLauncherForActivityResult(contract = FirebaseAuthUIActivityResultContract()) { result ->
