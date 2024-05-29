@@ -1,7 +1,15 @@
 package com.quasar.app
 
 import android.app.Application
-import com.quasar.app.map.MapViewModel
+import com.quasar.app.map.data.CirclesRepository
+import com.quasar.app.map.data.CirclesRepositoryImpl
+import com.quasar.app.map.data.PolygonsRepository
+import com.quasar.app.map.data.PolygonsRepositoryImpl
+import com.quasar.app.map.data.PolylinesRepository
+import com.quasar.app.map.data.PolylinesRepositoryImpl
+import com.quasar.app.map.data.WaypointsRepository
+import com.quasar.app.map.data.WaypointsRepositoryImpl
+import com.quasar.app.map.ui.MapViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.startKoin
@@ -21,10 +29,14 @@ class Quasar : Application() {
 val appModule = module {
     // ViewModels
     viewModel {
-        MapViewModel()
+        MapViewModel(get(), get(), get(), get())
     }
 
     // Repositories
+    single<WaypointsRepository> { WaypointsRepositoryImpl() }
+    single<CirclesRepository> { CirclesRepositoryImpl() }
+    single<PolylinesRepository> { PolylinesRepositoryImpl() }
+    single<PolygonsRepository> { PolygonsRepositoryImpl() }
 
     // DB
 }

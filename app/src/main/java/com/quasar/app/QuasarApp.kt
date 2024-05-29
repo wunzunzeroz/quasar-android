@@ -5,8 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
-import com.quasar.app.map.MapScreen
+import com.quasar.app.map.ui.MapScreen
 
 enum class QuasarScreen {
     LandingScreen, MapScreen
