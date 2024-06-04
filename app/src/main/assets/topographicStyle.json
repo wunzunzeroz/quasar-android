@@ -1,0 +1,53 @@
+{
+  "version": 8,
+  "name": "Quasar Topographic",
+  "sources": {
+    "outdoors": {
+      "type": "raster",
+      "url": "mapbox://mapbox.mapbox-outdoors-v11",
+      "tileSize": 256
+    },
+    "topo-50-nz": {
+      "type": "raster",
+      "tiles": [
+        "https://tiles-cdn.koordinates.com/services;key=[api_token]/tiles/v4/layer=52343/EPSG:3857/{z}/{x}/{y}.png"
+      ]
+    },
+    "topo-250-nz": {
+      "type": "raster",
+      "tiles": [
+        "https://tiles-cdn.koordinates.com/services;key=[api_token]/tiles/v4/layer=52324/EPSG:3857/{z}/{x}/{y}.png"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ddeeff"
+      }
+    },
+    {
+      "id": "outdoors",
+      "type": "raster",
+      "source": "outdoors",
+      "minzoom": 0,
+      "maxzoom": 22
+    },
+    {
+      "id": "topo-250-nz-layer",
+      "type": "raster",
+      "source": "topo-250-nz",
+      "minzoom": 0,
+      "maxzoom": 12
+    },
+    {
+      "id": "topo-50-nz-layer",
+      "type": "raster",
+      "source": "topo-50-nz",
+      "minzoom": 12,
+      "maxzoom": 22
+    }
+  ]
+}

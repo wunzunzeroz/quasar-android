@@ -1,0 +1,53 @@
+{
+  "version": 8,
+  "name": "Quasar Nautical",
+  "sources": {
+    "outdoors": {
+      "type": "raster",
+      "url": "mapbox://mapbox.mapbox-outdoors-v11",
+      "tileSize": 256
+    },
+    "nz-north-island": {
+      "type": "raster",
+      "tiles": [
+        "https://tiles-cdn.koordinates.com/services;key=[api_token]/tiles/v4/set=4758/EPSG:3857/{z}/{x}/{y}.png"
+      ]
+    },
+    "nz-south-island": {
+      "type": "raster",
+      "tiles": [
+        "https://tiles-cdn.koordinates.com/services;key=[api_token]/tiles/v4/set=4759/EPSG:3857/{z}/{x}/{y}.png"
+      ]
+    }
+  },
+  "layers": [
+    {
+      "id": "background",
+      "type": "background",
+      "paint": {
+        "background-color": "#ddeeff"
+      }
+    },
+    {
+      "id": "outdoors",
+      "type": "raster",
+      "source": "outdoors",
+      "minzoom": 0,
+      "maxzoom": 22
+    },
+    {
+      "id": "nz-ni-layer",
+      "type": "raster",
+      "source": "nz-north-island",
+      "minzoom": 0,
+      "maxzoom": 22
+    },
+    {
+      "id": "nz-si-layer",
+      "type": "raster",
+      "source": "nz-south-island",
+      "minzoom": 0,
+      "maxzoom": 22
+    }
+  ]
+}

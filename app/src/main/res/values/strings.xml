@@ -6,4 +6,5 @@
     <string name="title_activity_map">MapActivity</string>
     <string name="log_out">Log Out</string>
     <string name="title_activity_main">MainActivity</string>
+    <string name="select_map_style_sheet_title">Select Map Type</string>
 </resources>
