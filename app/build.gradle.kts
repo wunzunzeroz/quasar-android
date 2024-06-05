@@ -70,6 +70,7 @@ dependencies {
 
     // Additional Android libs
     implementation("androidx.compose.material:material-icons-extended:1.1.1")
+    implementation("com.google.accompanist:accompanist-permissions:0.35.1-alpha")
 
     // Firebase
     implementation(platform("com.google.firebase:firebase-bom:33.0.0"))

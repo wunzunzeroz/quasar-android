@@ -4,7 +4,9 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
@@ -15,6 +17,7 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,9 +46,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import com.firebase.ui.auth.AuthUI
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.Style
@@ -53,6 +60,9 @@ import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
+import com.mapbox.maps.plugin.PuckBearing
+import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
+import com.mapbox.maps.plugin.locationcomponent.location
 import com.quasar.app.QuasarScreen
 import com.quasar.app.R
 import com.quasar.app.map.components.MapActionButton
@@ -61,7 +71,9 @@ import com.quasar.app.map.styles.StyleLoader
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 
-@OptIn(ExperimentalMaterial3Api::class, MapboxExperimental::class)
+@OptIn(
+    ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
+)
 @Composable
 fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get()) {
     Column(
@@ -74,6 +86,9 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
         val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
         val scope = rememberCoroutineScope()
         val ctx = LocalContext.current
+
+        val locationPermissionState =
+            rememberPermissionState(android.Manifest.permission.ACCESS_FINE_LOCATION)
 
         ModalNavigationDrawer(drawerState = drawerState, gesturesEnabled = false, drawerContent = {
             ModalDrawerSheet {
@@ -114,6 +129,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
             }, bottomBar = {
                 BottomBar()
             }) { contentPadding ->
+
                 if (uiState.bottomSheetVisible) {
                     ModalBottomSheet(onDismissRequest = { viewModel.setBottomSheetVisible(false) }) {
                         when (uiState.bottomSheetType) {
@@ -133,6 +149,24 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         }
                     }
                 }
+
+                if (!locationPermissionState.status.isGranted) {
+                    return@Scaffold Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+                        Text(
+                            stringResource(R.string.location_permission_rationale),
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Button(onClick = { locationPermissionState.launchPermissionRequest() }) {
+                            Text(stringResource(R.string.request_permission_button))
+                        }
+                    }
+                }
+
                 Box(modifier = Modifier.fillMaxSize()) {
                     MapboxMap(
                         mapViewportState = remember {
@@ -176,6 +210,16 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         style = { MapStyle(style = Style.SATELLITE_STREETS) },
                         modifier = Modifier.fillMaxSize(),
                     ) {
+                        MapEffect { mapView ->
+                            mapView.location.let {
+                                it.enabled = true
+                                it.pulsingEnabled = true
+                                it.puckBearing = PuckBearing.HEADING
+                                it.pulsingEnabled = true
+                                it.locationPuck = createDefault2DPuck(withBearing = true)
+                            }
+
+                        }
                         MapEffect(uiState.mapStyle) { mapView ->
                             val style = StyleLoader.getStyle(uiState.mapStyle, ctx)
                             Log.d(logTag, "Set map style: ${uiState.mapStyle}")

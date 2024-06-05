@@ -7,4 +7,6 @@
     <string name="log_out">Log Out</string>
     <string name="title_activity_main">MainActivity</string>
     <string name="select_map_style_sheet_title">Select Map Type</string>
+    <string name="location_permission_rationale">Location access is required for Quasar to work properly. Please grant permission.</string>
+    <string name="request_permission_button">Request Permission</string>
 </resources>
