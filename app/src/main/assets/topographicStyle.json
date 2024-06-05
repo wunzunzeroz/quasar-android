@@ -39,6 +39,7 @@
       "id": "topo-250-nz-layer",
       "type": "raster",
       "source": "topo-250-nz",
+      "tileSize": 1024,
       "minzoom": 0,
       "maxzoom": 12
     },
@@ -46,6 +47,7 @@
       "id": "topo-50-nz-layer",
       "type": "raster",
       "source": "topo-50-nz",
+      "tileSize": 1024,
       "minzoom": 12,
       "maxzoom": 22
     }
