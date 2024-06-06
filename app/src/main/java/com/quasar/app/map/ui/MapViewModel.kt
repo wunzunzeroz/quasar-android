@@ -1,6 +1,7 @@
 package com.quasar.app.map.ui
 
 import androidx.lifecycle.ViewModel
+import com.mapbox.geojson.Point
 import com.quasar.app.map.data.CirclesRepository
 import com.quasar.app.map.data.PolygonsRepository
 import com.quasar.app.map.data.PolylinesRepository
@@ -21,6 +22,9 @@ class MapViewModel(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
+
+    private val _userLocation = MutableStateFlow(Point.fromLngLat(174.858, -36.787))
+    val userlocation: StateFlow<Point> = _userLocation.asStateFlow()
 
     fun setMapStyle(style: MapStyle) {
         _uiState.update { currentState ->
@@ -44,5 +48,9 @@ class MapViewModel(
                 bottomSheetType = type
             )
         }
+    }
+
+    fun setUserLocation(point: Point) {
+        _userLocation.update { point }
     }
 }

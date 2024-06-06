@@ -39,6 +39,7 @@
       "id": "nz-ni-layer",
       "type": "raster",
       "source": "nz-north-island",
+      "tileSize": 1024,
       "minzoom": 0,
       "maxzoom": 22
     },
@@ -46,6 +47,7 @@
       "id": "nz-si-layer",
       "type": "raster",
       "source": "nz-south-island",
+      "tileSize": 1024,
       "minzoom": 0,
       "maxzoom": 22
     }

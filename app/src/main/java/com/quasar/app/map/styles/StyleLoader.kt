@@ -21,7 +21,7 @@ class StyleLoader {
         }
 
         private fun replaceApiKey(json: String): String {
-            val linzkey = ""
+            val linzkey = "1334e918fd854116b092b245f2a883ee"
 
             return json.replace("[api_token]", linzkey)
         }
