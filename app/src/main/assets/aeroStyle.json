@@ -20,7 +20,7 @@
         "mapbox://mttchpmn.cncysusp": {
             "url": "mapbox://mttchpmn.cncysusp",
             "type": "raster",
-            "tileSize": 256
+            "tileSize": 128
         }
     },
     "sprite": "mapbox://sprites/mttchpmn/clwznhrnd01j401pocuce8nrk/8cfd3drho5eet9n336g32nhhr",

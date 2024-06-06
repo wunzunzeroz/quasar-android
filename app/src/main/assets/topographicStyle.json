@@ -11,13 +11,15 @@
       "type": "raster",
       "tiles": [
         "https://tiles-cdn.koordinates.com/services;key=[api_token]/tiles/v4/layer=52343/EPSG:3857/{z}/{x}/{y}.png"
-      ]
+      ],
+      "tileSize": 128
     },
     "topo-250-nz": {
       "type": "raster",
       "tiles": [
         "https://tiles-cdn.koordinates.com/services;key=[api_token]/tiles/v4/layer=52324/EPSG:3857/{z}/{x}/{y}.png"
-      ]
+      ],
+      "tileSize": 128
     }
   },
   "layers": [
@@ -39,7 +41,6 @@
       "id": "topo-250-nz-layer",
       "type": "raster",
       "source": "topo-250-nz",
-      "tileSize": 1024,
       "minzoom": 0,
       "maxzoom": 12
     },
@@ -47,7 +48,6 @@
       "id": "topo-50-nz-layer",
       "type": "raster",
       "source": "topo-50-nz",
-      "tileSize": 1024,
       "minzoom": 12,
       "maxzoom": 22
     }
