@@ -2,6 +2,7 @@ package com.quasar.app.map.ui
 
 import android.animation.ValueAnimator
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,6 +15,8 @@ import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MyLocation
+import androidx.compose.material.icons.filled.Navigation
+import androidx.compose.material.icons.filled.RotateLeft
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
@@ -53,12 +56,14 @@ import com.mapbox.geojson.Point
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.Style
 import com.mapbox.maps.dsl.cameraOptions
+import com.mapbox.maps.extension.compose.DefaultSettingsProvider
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.style.MapStyle
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
+import com.mapbox.maps.plugin.gestures.generated.GesturesSettings
 import com.mapbox.maps.plugin.locationcomponent.LocationConsumer
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
 import com.mapbox.maps.plugin.locationcomponent.location
@@ -144,7 +149,11 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 })
 
                             BottomSheetContentType.GoToLocation -> TODO()
-                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(userLocation, tappedLocation.value)
+                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(
+                                userLocation,
+                                tappedLocation.value
+                            )
+
                             BottomSheetContentType.AddWaypoint -> TODO()
                             BottomSheetContentType.AddAnnotation -> TODO()
                             BottomSheetContentType.AddCircleAnnotation -> TODO()
@@ -171,8 +180,21 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         }
                     }
 
+                    var mapRotationEnabled = remember {
+                        mutableStateOf(false)
+                    }
+                    val initialGestures = GesturesSettings {
+                        rotateEnabled = false
+                    }
+                    val mapGesturesSettings = remember {
+                        mutableStateOf(GesturesSettings {
+                            rotateEnabled = mapRotationEnabled.value
+                        })
+                    }
+
                     MapboxMap(
                         mapViewportState = mapViewportState,
+                        gesturesSettings = mapGesturesSettings.value,
                         compass = {
                             Compass(
                                 modifier = Modifier.padding(contentPadding),
@@ -292,6 +314,15 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 zoom(12.0)
                             }, MapAnimationOptions.mapAnimationOptions { duration(3000) })
                         })
+                        Spacer(modifier = Modifier.height(8.dp))
+                        MapActionButton(
+                            icon = if (mapRotationEnabled.value) Icons.Filled.Navigation else Icons.Filled.RotateLeft,
+                            onClick = {
+                                mapRotationEnabled.value = !mapRotationEnabled.value
+                                mapGesturesSettings.value = mapGesturesSettings.value.toBuilder()
+                                    .setRotateEnabled(mapRotationEnabled.value).build()
+                                Log.d(logTag, "Map rotation enabled: $mapRotationEnabled")
+                            })
                     }
                 }
             }
