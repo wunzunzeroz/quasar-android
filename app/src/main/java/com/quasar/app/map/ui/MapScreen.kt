@@ -42,6 +42,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -60,6 +61,7 @@ import com.mapbox.maps.extension.compose.DefaultSettingsProvider
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
+import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotation
 import com.mapbox.maps.extension.compose.style.MapStyle
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
@@ -69,6 +71,7 @@ import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.quasar.app.QuasarScreen
 import com.quasar.app.R
+import com.quasar.app.map.components.AddWaypointSheet
 import com.quasar.app.map.components.BottomBar
 import com.quasar.app.map.components.LocationDetailSheet
 import com.quasar.app.map.components.MapActionButton
@@ -140,7 +143,10 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 val userLocation by viewModel.userlocation.collectAsState()
 
                 if (uiState.bottomSheetVisible) {
-                    ModalBottomSheet(onDismissRequest = { viewModel.setBottomSheetVisible(false) }) {
+                    ModalBottomSheet(onDismissRequest = {
+                        viewModel.setBottomSheetVisible(false)
+                        tappedLocation.value = null
+                    }) {
                         when (uiState.bottomSheetType) {
                             BottomSheetContentType.SelectMapStyle -> SelectMapStyleSheet(
                                 onMapStyleSelected = {
@@ -151,10 +157,16 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             BottomSheetContentType.GoToLocation -> TODO()
                             BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(
                                 userLocation,
-                                tappedLocation.value
+                                tappedLocation.value,
+                                {
+                                    viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
+                                }
                             )
 
-                            BottomSheetContentType.AddWaypoint -> TODO()
+                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(
+                                userLocation,
+                                onCreateWaypoint = {})
+
                             BottomSheetContentType.AddAnnotation -> TODO()
                             BottomSheetContentType.AddCircleAnnotation -> TODO()
                             BottomSheetContentType.AddPolylineAnnotation -> TODO()
@@ -296,6 +308,16 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             val style = StyleLoader.getStyle(uiState.mapStyle, ctx)
                             Log.d(logTag, "Set map style: ${uiState.mapStyle}")
                             mapView.mapboxMap.loadStyle(style)
+                        }
+
+                        if (tappedLocation.value != null) {
+                            CircleAnnotation(
+                                point = tappedLocation.value,
+                                circleColorInt = MaterialTheme.colorScheme.primary.toArgb(),
+                                circleStrokeColorInt = Color.Black.toArgb(), // TODO
+                                circleRadius = 6.0,
+                                circleStrokeWidth = 3.0,
+                            )
                         }
                     }
                     Column(
