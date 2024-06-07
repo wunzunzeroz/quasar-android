@@ -10,15 +10,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Layers
-import androidx.compose.material.icons.filled.List
-import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
@@ -29,8 +24,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -40,7 +33,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -71,7 +64,10 @@ import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.quasar.app.QuasarScreen
 import com.quasar.app.R
+import com.quasar.app.map.components.BottomBar
+import com.quasar.app.map.components.LocationDetailSheet
 import com.quasar.app.map.components.MapActionButton
+import com.quasar.app.map.components.PermissionRequest
 import com.quasar.app.map.components.SelectMapStyleSheet
 import com.quasar.app.map.styles.StyleLoader
 import kotlinx.coroutines.launch
@@ -135,6 +131,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
             }, bottomBar = {
                 BottomBar()
             }) { contentPadding ->
+                var tappedLocation = remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
                 if (uiState.bottomSheetVisible) {
                     ModalBottomSheet(onDismissRequest = { viewModel.setBottomSheetVisible(false) }) {
                         when (uiState.bottomSheetType) {
@@ -145,7 +142,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 })
 
                             BottomSheetContentType.GoToLocation -> TODO()
-                            BottomSheetContentType.ViewLocationDetail -> TODO()
+                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(tappedLocation.value)
                             BottomSheetContentType.AddWaypoint -> TODO()
                             BottomSheetContentType.AddAnnotation -> TODO()
                             BottomSheetContentType.AddCircleAnnotation -> TODO()
@@ -156,22 +153,10 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 }
 
                 if (!locationPermissionState.status.isGranted) {
-                    return@Scaffold Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center,
-                        modifier = Modifier.fillMaxSize()
-                    ) {
-                        Text(
-                            stringResource(R.string.location_permission_rationale),
-                            textAlign = TextAlign.Center
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Button(onClick = { locationPermissionState.launchPermissionRequest() }) {
-                            Text(stringResource(R.string.request_permission_button))
-                        }
-                    }
+                    return@Scaffold PermissionRequest(onLaunchPermissionRequest = { locationPermissionState.launchPermissionRequest() })
                 }
 
+                // Map Container
                 Box(modifier = Modifier.fillMaxSize()) {
                     val mapViewportState = remember {
                         MapViewportState().apply {
@@ -183,6 +168,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             }
                         }
                     }
+                    val userLocation by viewModel.userlocation.collectAsState()
+
                     MapboxMap(
                         mapViewportState = mapViewportState,
                         compass = {
@@ -202,6 +189,9 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 logTag,
                                 "User tapped map at Lat/Lng: ${it.latitude()}/${it.longitude()}"
                             )
+                            tappedLocation.value = it
+                            viewModel.setBottomSheetContentType(BottomSheetContentType.ViewLocationDetail)
+                            viewModel.setBottomSheetVisible(true)
 
                             true
                         },
@@ -226,51 +216,56 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             }
 
                         }
-                        MapEffect {mapView ->
+                        MapEffect { mapView ->
                             // TODO - Use location service instead of location provider
                             mapView.location.getLocationProvider().let {
                                 it?.registerLocationConsumer(
                                     // TODO - Extract consumer to own file
                                     object : LocationConsumer {
-                                    override fun onBearingUpdated(
-                                        vararg bearing: Double,
-                                        options: (ValueAnimator.() -> Unit)?
-                                    ) {
-                                    }
+                                        override fun onBearingUpdated(
+                                            vararg bearing: Double,
+                                            options: (ValueAnimator.() -> Unit)?
+                                        ) {
+                                        }
 
-                                    override fun onError(error: LocationError) {
-                                    }
+                                        override fun onError(error: LocationError) {
+                                        }
 
-                                    override fun onHorizontalAccuracyRadiusUpdated(
-                                        vararg radius: Double,
-                                        options: (ValueAnimator.() -> Unit)?
-                                    ) {
-                                    }
+                                        override fun onHorizontalAccuracyRadiusUpdated(
+                                            vararg radius: Double,
+                                            options: (ValueAnimator.() -> Unit)?
+                                        ) {
+                                        }
 
-                                    override fun onLocationUpdated(
-                                        vararg location: Point,
-                                        options: (ValueAnimator.() -> Unit)?
-                                    ) {
-                                        Log.d(logTag, "User location updated to lat/lng: ${location.first().latitude()}/${location.first().longitude()}")
-                                        location.first().let { point -> viewModel.setUserLocation(point) }
+                                        override fun onLocationUpdated(
+                                            vararg location: Point,
+                                            options: (ValueAnimator.() -> Unit)?
+                                        ) {
+                                            Log.d(
+                                                logTag, "User location updated to lat/lng: ${
+                                                    location.first().latitude()
+                                                }/${location.first().longitude()}"
+                                            )
+                                            location.first()
+                                                .let { point -> viewModel.setUserLocation(point) }
 
-                                    }
+                                        }
 
-                                    override fun onPuckAccuracyRadiusAnimatorDefaultOptionsUpdated(
-                                        options: ValueAnimator.() -> Unit
-                                    ) {
-                                    }
+                                        override fun onPuckAccuracyRadiusAnimatorDefaultOptionsUpdated(
+                                            options: ValueAnimator.() -> Unit
+                                        ) {
+                                        }
 
-                                    override fun onPuckBearingAnimatorDefaultOptionsUpdated(
-                                        options: ValueAnimator.() -> Unit
-                                    ) {
-                                    }
+                                        override fun onPuckBearingAnimatorDefaultOptionsUpdated(
+                                            options: ValueAnimator.() -> Unit
+                                        ) {
+                                        }
 
-                                    override fun onPuckLocationAnimatorDefaultOptionsUpdated(
-                                        options: ValueAnimator.() -> Unit
-                                    ) {
-                                    }
-                                })
+                                        override fun onPuckLocationAnimatorDefaultOptionsUpdated(
+                                            options: ValueAnimator.() -> Unit
+                                        ) {
+                                        }
+                                    })
                             }
 
                         }
@@ -285,53 +280,21 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             .padding(contentPadding)
                             .padding(horizontal = 8.dp)
                     ) {
-                        val userLocation by viewModel.userlocation.collectAsState()
                         MapActionButton(icon = Icons.Filled.Layers, onClick = {
                             viewModel.setBottomSheetContentType(BottomSheetContentType.SelectMapStyle)
                             viewModel.setBottomSheetVisible(true)
                         })
                         Spacer(modifier = Modifier.height(8.dp))
                         MapActionButton(icon = Icons.Filled.MyLocation, onClick = {
-                            mapViewportState.flyTo(
-                                cameraOptions = cameraOptions {
-                                    center(userLocation)
-                                    zoom(12.0)
-                                },
-                                MapAnimationOptions.mapAnimationOptions { duration(3000) }
-                            )
+                            mapViewportState.flyTo(cameraOptions = cameraOptions {
+                                center(userLocation)
+                                zoom(12.0)
+                            }, MapAnimationOptions.mapAnimationOptions { duration(3000) })
                         })
                     }
                 }
             }
         }
 
-    }
-}
-
-@Composable
-fun BottomBar() {
-    NavigationBar() {
-        val selectedItem = remember {
-            mutableIntStateOf(0)
-        }
-
-        val items = listOf(
-            "Map", "Tasks", "Chat", "Teams", "Profile"
-        )
-        val icons = listOf(
-            Icons.Default.Map,
-            Icons.Default.List,
-            Icons.Default.Chat,
-            Icons.Default.Group,
-            Icons.Default.Person
-        )
-        items.forEachIndexed { index, item ->
-            NavigationBarItem(
-                icon = { Icon(icons[index], contentDescription = item) },
-                label = { Text(item) },
-                selected = selectedItem.intValue == index,
-                onClick = { selectedItem.intValue = index },
-            )
-        }
     }
 }
