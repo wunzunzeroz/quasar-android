@@ -47,11 +47,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mapbox.geojson.Point
+import com.mapbox.turf.TurfConstants
+import com.mapbox.turf.TurfMeasurement
 import com.quasar.app.R
 import com.quasar.app.map.styles.MapStyle
 
 @Composable
-fun LocationDetailSheet(location: Point, modifier: Modifier = Modifier) {
+fun LocationDetailSheet(userLocation: Point, location: Point, modifier: Modifier = Modifier) {
     val ctx = LocalContext.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -63,23 +65,59 @@ fun LocationDetailSheet(location: Point, modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(32.dp))
         Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
             Column {
-                Text(String.format("%.6f", location.latitude()), style = MaterialTheme.typography.titleLarge)
+                Text(
+                    String.format("%.6f", location.latitude()),
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Text("Latitude", style = MaterialTheme.typography.labelLarge)
             }
             Column {
-                Text(String.format("%.6f", location.longitude()), style = MaterialTheme.typography.titleLarge)
+                Text(
+                    String.format("%.6f", location.longitude()),
+                    style = MaterialTheme.typography.titleLarge
+                )
                 Text("Longitude", style = MaterialTheme.typography.labelLarge)
+            }
+        }
+        Spacer(Modifier.height(8.dp))
+        Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+            Column {
+                Text(
+                    String.format("%.1f km", calculateDistance(userLocation, location)),
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text("Distance", style = MaterialTheme.typography.labelLarge)
+            }
+            Column {
+                Text(
+                    String.format("%.0f °T", calculateBearing(userLocation, location)),
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Text("Bearing", style = MaterialTheme.typography.labelLarge)
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
         Button(onClick = { /*TODO*/ }, modifier = Modifier.fillMaxWidth()) {
             Text("Create Waypoint")
         }
-        OutlinedButton(onClick = { shareLocation(ctx, location) }, modifier = Modifier.fillMaxWidth()) {
+        OutlinedButton(
+            onClick = { shareLocation(ctx, location) },
+            modifier = Modifier.fillMaxWidth()
+        ) {
             Text("Share Location")
         }
         Spacer(modifier = Modifier.height(16.dp))
     }
+}
+
+fun calculateDistance(point1: Point, point2: Point): Double {
+    return TurfMeasurement.distance(point1, point2, TurfConstants.UNIT_KILOMETERS)
+}
+
+fun calculateBearing(point1: Point, point2: Point): Double {
+    val result = TurfMeasurement.bearing(point1, point2)
+
+    return if (result < 0) 360 + result else result
 }
 
 private fun shareLocation(context: Context, location: Point) {
@@ -98,6 +136,7 @@ private fun shareLocation(context: Context, location: Point) {
 @Composable
 fun LocationDetailSheetPreview() {
     LocationDetailSheet(
+        userLocation = Point.fromLngLat(68.987654, 44.987654),
         location = Point.fromLngLat(69.123456789, 42.123456789)
     )
 }

@@ -80,8 +80,10 @@ dependencies {
 
     // Mapbox
     val mapboxVersion = "11.4.0"
+    val turfVersion = "6.15.0"
     implementation("com.mapbox.maps:android:$mapboxVersion")
     implementation("com.mapbox.extension:maps-compose:$mapboxVersion")
+    implementation("com.mapbox.mapboxsdk:mapbox-sdk-turf:$turfVersion")
 
     // Koin
     val koinVersion = "3.1.2"

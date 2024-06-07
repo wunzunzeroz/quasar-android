@@ -131,7 +131,9 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
             }, bottomBar = {
                 BottomBar()
             }) { contentPadding ->
-                var tappedLocation = remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
+                val tappedLocation = remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
+                val userLocation by viewModel.userlocation.collectAsState()
+
                 if (uiState.bottomSheetVisible) {
                     ModalBottomSheet(onDismissRequest = { viewModel.setBottomSheetVisible(false) }) {
                         when (uiState.bottomSheetType) {
@@ -142,7 +144,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 })
 
                             BottomSheetContentType.GoToLocation -> TODO()
-                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(tappedLocation.value)
+                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(userLocation, tappedLocation.value)
                             BottomSheetContentType.AddWaypoint -> TODO()
                             BottomSheetContentType.AddAnnotation -> TODO()
                             BottomSheetContentType.AddCircleAnnotation -> TODO()
@@ -168,7 +170,6 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             }
                         }
                     }
-                    val userLocation by viewModel.userlocation.collectAsState()
 
                     MapboxMap(
                         mapViewportState = mapViewportState,
