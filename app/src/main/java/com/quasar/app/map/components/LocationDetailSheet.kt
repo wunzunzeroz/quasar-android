@@ -50,10 +50,17 @@ import com.mapbox.geojson.Point
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfMeasurement
 import com.quasar.app.R
+import com.quasar.app.map.models.CreateWaypointInput
+import com.quasar.app.map.models.Position
 import com.quasar.app.map.styles.MapStyle
 
 @Composable
-fun LocationDetailSheet(userLocation: Point, location: Point, modifier: Modifier = Modifier) {
+fun LocationDetailSheet(
+    userLocation: Point,
+    location: Point,
+    onCreateWaypoint: () -> Unit,
+    modifier: Modifier = Modifier
+) {
     val ctx = LocalContext.current
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -97,7 +104,9 @@ fun LocationDetailSheet(userLocation: Point, location: Point, modifier: Modifier
             }
         }
         Spacer(modifier = Modifier.height(16.dp))
-        Button(onClick = { /*TODO*/ }, modifier = Modifier.fillMaxWidth()) {
+        Button(onClick = {
+            onCreateWaypoint()
+        }, modifier = Modifier.fillMaxWidth()) {
             Text("Create Waypoint")
         }
         OutlinedButton(
@@ -137,6 +146,7 @@ private fun shareLocation(context: Context, location: Point) {
 fun LocationDetailSheetPreview() {
     LocationDetailSheet(
         userLocation = Point.fromLngLat(68.987654, 44.987654),
-        location = Point.fromLngLat(69.123456789, 42.123456789)
+        location = Point.fromLngLat(69.123456789, 42.123456789),
+        onCreateWaypoint = {}
     )
 }

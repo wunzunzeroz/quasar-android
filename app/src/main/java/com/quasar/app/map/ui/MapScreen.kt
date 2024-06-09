@@ -62,9 +62,11 @@ import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotation
+import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGroup
 import com.mapbox.maps.extension.compose.style.MapStyle
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
+import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
 import com.mapbox.maps.plugin.gestures.generated.GesturesSettings
 import com.mapbox.maps.plugin.locationcomponent.LocationConsumer
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
@@ -80,6 +82,7 @@ import com.quasar.app.map.components.SelectMapStyleSheet
 import com.quasar.app.map.styles.StyleLoader
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
+import kotlin.math.log
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -141,6 +144,9 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
             }) { contentPadding ->
                 val tappedLocation = remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
                 val userLocation by viewModel.userlocation.collectAsState()
+                val coroutineScope = rememberCoroutineScope()
+
+                val waypoints by viewModel.waypoints.collectAsState()
 
                 if (uiState.bottomSheetVisible) {
                     ModalBottomSheet(onDismissRequest = {
@@ -164,8 +170,13 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             )
 
                             BottomSheetContentType.AddWaypoint -> AddWaypointSheet(
-                                userLocation,
-                                onCreateWaypoint = {})
+                                tappedLocation.value,
+                                onCreateWaypoint = {
+                                    coroutineScope.launch {
+                                        viewModel.saveWaypoint(it)
+                                        viewModel.setBottomSheetVisible(false)
+                                    }
+                                })
 
                             BottomSheetContentType.AddAnnotation -> TODO()
                             BottomSheetContentType.AddCircleAnnotation -> TODO()
@@ -241,6 +252,32 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         style = { MapStyle(style = Style.SATELLITE_STREETS) },
                         modifier = Modifier.fillMaxSize(),
                     ) {
+
+                        val waypointAnnotations = waypoints.map {
+                            Log.d(
+                                logTag,
+                                "Waypoint: ${it.name} - ${it.position.gridReference}, ${it.position.latLngDecimal}"
+                            )
+                            CircleAnnotationOptions()
+                                .withPoint(it.position.toPoint())
+                                .withCircleRadius(10.0)
+                                .withCircleColor(Color.Green.toArgb())
+                        }
+
+                        CircleAnnotationGroup(
+                            annotations = waypointAnnotations
+                        )
+
+                        if (tappedLocation.value != null) {
+                            CircleAnnotation(
+                                point = tappedLocation.value,
+                                circleColorInt = MaterialTheme.colorScheme.primary.toArgb(),
+                                circleStrokeColorInt = Color.Black.toArgb(), // TODO
+                                circleRadius = 6.0,
+                                circleStrokeWidth = 3.0,
+                            )
+                        }
+
                         MapEffect { mapView ->
                             mapView.location.let {
                                 it.enabled = true
@@ -310,15 +347,6 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             mapView.mapboxMap.loadStyle(style)
                         }
 
-                        if (tappedLocation.value != null) {
-                            CircleAnnotation(
-                                point = tappedLocation.value,
-                                circleColorInt = MaterialTheme.colorScheme.primary.toArgb(),
-                                circleStrokeColorInt = Color.Black.toArgb(), // TODO
-                                circleRadius = 6.0,
-                                circleStrokeWidth = 3.0,
-                            )
-                        }
                     }
                     Column(
                         modifier = Modifier
