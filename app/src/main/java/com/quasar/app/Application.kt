@@ -1,6 +1,8 @@
 package com.quasar.app
 
 import android.app.Application
+import androidx.room.Room
+import com.quasar.app.map.data.AppDatabase
 import com.quasar.app.map.data.CirclesRepository
 import com.quasar.app.map.data.CirclesRepositoryImpl
 import com.quasar.app.map.data.PolygonsRepository
@@ -35,11 +37,17 @@ val appModule = module {
     }
 
     // Repositories
-    single<WaypointsRepository> { WaypointsRepositoryImpl() }
+    single<WaypointsRepository> { WaypointsRepositoryImpl(get()) }
     single<CirclesRepository> { CirclesRepositoryImpl() }
     single<PolylinesRepository> { PolylinesRepositoryImpl() }
     single<PolygonsRepository> { PolygonsRepositoryImpl() }
     single<SketchRepository> { SketchRepositoryImpl() }
 
+    // DAO
+    single { get<AppDatabase>().waypointDao() }
+
     // DB
+    single {
+        Room.databaseBuilder(get(), AppDatabase::class.java, "app-database").build()
+    }
 }

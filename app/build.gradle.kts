@@ -78,12 +78,24 @@ dependencies {
     implementation("com.google.firebase:firebase-auth")
     implementation("com.firebaseui:firebase-ui-auth:7.2.0")
 
+    // Room
+    val roomVersion = "2.6.1"
+    implementation("androidx.room:room-runtime:$roomVersion")
+    implementation("androidx.room:room-ktx:$roomVersion")
+    annotationProcessor("androidx.room:room-compiler:$roomVersion")
+
     // Mapbox
     val mapboxVersion = "11.4.0"
     val turfVersion = "6.15.0"
     implementation("com.mapbox.maps:android:$mapboxVersion")
     implementation("com.mapbox.extension:maps-compose:$mapboxVersion")
     implementation("com.mapbox.mapboxsdk:mapbox-sdk-turf:$turfVersion")
+
+    // Proj4J (Map conversions)
+
+    val proj4j_version = "1.3.0"
+    implementation("org.locationtech.proj4j:proj4j:$proj4j_version")
+    implementation("org.locationtech.proj4j:proj4j-epsg:$proj4j_version")
 
     // Koin
     val koinVersion = "3.1.2"
