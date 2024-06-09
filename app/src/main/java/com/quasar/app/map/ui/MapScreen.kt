@@ -1,8 +1,12 @@
 package com.quasar.app.map.ui
 
 import android.animation.ValueAnimator
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.drawable.BitmapDrawable
 import android.util.Log
-import android.widget.Toast
+import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,7 +21,6 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.RotateLeft
-import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,30 +48,32 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import com.firebase.ui.auth.AuthUI
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
-import com.google.gson.JsonElement
 import com.mapbox.common.location.LocationError
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.Style
 import com.mapbox.maps.dsl.cameraOptions
-import com.mapbox.maps.extension.compose.DefaultSettingsProvider
 import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGroup
+import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
+import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
 import com.mapbox.maps.extension.compose.style.MapStyle
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.gestures.generated.GesturesSettings
 import com.mapbox.maps.plugin.locationcomponent.LocationConsumer
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
@@ -83,10 +88,10 @@ import com.quasar.app.map.components.PermissionRequest
 import com.quasar.app.map.components.SelectMapStyleSheet
 import com.quasar.app.map.components.ViewWaypointDetailSheet
 import com.quasar.app.map.models.Waypoint
+import com.quasar.app.map.models.WaypointMarkerType
 import com.quasar.app.map.styles.StyleLoader
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
-import kotlin.math.log
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -267,14 +272,11 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 logTag,
                                 "Waypoint: ${it.name} - ${it.position.gridReference}, ${it.position.latLngDecimal}, color: ${it.getColor()}"
                             )
-                            CircleAnnotationOptions().withPoint(it.position.toPoint())
-                                .withCircleRadius(10.0)
-//                                .withCircleColor(Color.Red.toArgb())
-                                .withCircleColor("#FF4f00")
-
+                            PointAnnotationOptions().withPoint(it.position.toPoint())
+                                .withIconImage(getMarkerBitmap(ctx, it.markerType))
                         }
 
-                        CircleAnnotationGroup(annotations = waypointAnnotations, onClick = {
+                        PointAnnotationGroup(annotations = waypointAnnotations, onClick = {
                             val wpt = waypoints.first { w -> w.position.toPoint() == it.point }
                             Log.d(logTag, "Waypoint tapped: ${wpt.name}")
 
@@ -394,5 +396,60 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
             }
         }
 
+    }
+}
+
+private fun getMarkerBitmap(context: Context, markerType: WaypointMarkerType): Bitmap {
+    val drawableId = getDrawableForWaypointMarker(markerType)
+    val drawable = ContextCompat.getDrawable(context, drawableId)
+
+    if (drawable is BitmapDrawable) {
+        return resizeBitmap(drawable.bitmap)
+    }
+    throw Exception("Unable to get bitmap for marker type: $markerType")
+}
+
+private fun resizeBitmap(bitmap: Bitmap, size: Int = 40): Bitmap {
+    return Bitmap.createScaledBitmap(bitmap, size, size, false)
+}
+
+fun getDrawableForWaypointMarker(markerType: WaypointMarkerType): Int {
+    return when (markerType) {
+        WaypointMarkerType.Flag -> R.drawable.flag
+        WaypointMarkerType.Marker -> R.drawable.marker
+        WaypointMarkerType.Pin -> R.drawable.marker
+        WaypointMarkerType.Cross -> R.drawable.cross
+        WaypointMarkerType.Circle -> R.drawable.check_mark
+        WaypointMarkerType.Triangle -> R.drawable.triangle
+        WaypointMarkerType.Square -> R.drawable.marker
+        WaypointMarkerType.Star -> R.drawable.star
+        WaypointMarkerType.QuestionMark -> R.drawable.question_mark
+        WaypointMarkerType.ExclamationPoint -> R.drawable.exclamation_mark
+        WaypointMarkerType.CheckMark -> R.drawable.check_mark
+        WaypointMarkerType.CrossMark -> R.drawable.cross_mark
+        WaypointMarkerType.Car -> R.drawable.car
+        WaypointMarkerType.Boat -> R.drawable.boat
+        WaypointMarkerType.Plane -> R.drawable.plane
+        WaypointMarkerType.Helicopter -> R.drawable.helicopter
+        WaypointMarkerType.Forest -> R.drawable.forest
+        WaypointMarkerType.Water -> R.drawable.water
+        WaypointMarkerType.Mountain -> R.drawable.mountains
+        WaypointMarkerType.Beach -> R.drawable.beach
+        WaypointMarkerType.Fire -> R.drawable.fire
+        WaypointMarkerType.Anchor -> R.drawable.anchor
+        WaypointMarkerType.Lifering -> R.drawable.lifering
+        WaypointMarkerType.Target -> R.drawable.target
+        WaypointMarkerType.Tent -> R.drawable.tent
+        WaypointMarkerType.House -> R.drawable.house
+        WaypointMarkerType.Building -> R.drawable.building
+        WaypointMarkerType.Castle -> R.drawable.castle
+        WaypointMarkerType.Footprints -> R.drawable.footsteps
+        WaypointMarkerType.Person -> R.drawable.person
+        WaypointMarkerType.People -> R.drawable.people
+        WaypointMarkerType.Skull -> R.drawable.skull
+        WaypointMarkerType.Drinks -> R.drawable.drinks
+        WaypointMarkerType.Food -> R.drawable.food
+        WaypointMarkerType.WaterSource -> R.drawable.water_source
+        WaypointMarkerType.Fuel -> R.drawable.fuel
     }
 }

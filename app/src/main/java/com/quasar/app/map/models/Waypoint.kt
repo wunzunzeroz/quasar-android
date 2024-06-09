@@ -1,5 +1,6 @@
 package com.quasar.app.map.models
 
+import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -31,7 +32,7 @@ data class CreateWaypointInput(
     val markerColor: Long,
 )
 
-enum class WaypointMarkerType {
+enum class WaypointMarkerType() {
     Flag,
     Marker,
     Pin,
