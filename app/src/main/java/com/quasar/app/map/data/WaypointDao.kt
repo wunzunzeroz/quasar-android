@@ -19,7 +19,7 @@ interface WaypointDao {
     fun getById(id: Int): Flow<Waypoint>
 
     @Query("SELECT * FROM waypoint WHERE position = :pos")
-    suspend fun getByPosition(pos: Position): Flow<Waypoint>
+    fun getByPosition(pos: Position): Flow<Waypoint>
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insert(waypoint: Waypoint)

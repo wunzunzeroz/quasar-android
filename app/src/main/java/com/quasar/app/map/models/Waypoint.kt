@@ -8,14 +8,18 @@ import androidx.room.PrimaryKey
 data class Waypoint(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
+    val position: Position,
     val name: String,
+    val code: String,
     val markerType: WaypointMarkerType,
     val markerColor: Long,
-    val position: Position,
-    val description: String
 ) {
     fun getColor(): Color {
         return Color(markerColor.toInt()) // Convert Long back to Color
+    }
+
+    override fun toString(): String {
+        return "Waypoint {Name = $name, Position = ${position.latLngDecimal}, Code = $code, MarkerType = $markerType, MarkerColor = $markerColor}"
     }
 }
 
