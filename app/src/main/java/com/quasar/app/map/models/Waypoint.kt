@@ -22,6 +22,22 @@ data class Waypoint(
     override fun toString(): String {
         return "Waypoint {Name = $name, Position = ${position.latLngDecimal}, Code = $code, MarkerType = $markerType, MarkerColor = $markerColor}"
     }
+
+    fun withPosition(position: Position): Waypoint {
+        return Waypoint(id, position, name, code, markerType, markerColor)
+    }
+
+    fun withName(name: String): Waypoint {
+        return Waypoint(id, position, name, code, markerType, markerColor)
+    }
+
+    fun withCode(code: String): Waypoint {
+        return Waypoint(id, position, name, code, markerType, markerColor)
+    }
+
+    fun withMarkerType(markerType: WaypointMarkerType): Waypoint {
+        return Waypoint(id, position, name, code, markerType, markerColor)
+    }
 }
 
 data class CreateWaypointInput(

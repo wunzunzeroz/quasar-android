@@ -12,6 +12,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -35,22 +36,107 @@ import com.quasar.app.map.models.CreateWaypointInput
 import com.quasar.app.map.models.Position
 import com.quasar.app.map.models.Waypoint
 import com.quasar.app.map.models.WaypointMarkerType
+import com.quasar.app.map.utils.Utils
 import kotlinx.coroutines.launch
 
 @Composable
 fun ViewWaypointDetailSheet(
-    waypoint: Waypoint, modifier: Modifier = Modifier
+    waypoint: Waypoint,
+    onUpdateWaypoint: (Waypoint) -> Unit,
+    onDeleteWaypoint: (Waypoint) -> Unit,
+    modifier: Modifier = Modifier
 ) {
+    var latitude by remember { mutableDoubleStateOf(waypoint.position.latLngDecimal.latitude) }
+    var longitude by remember { mutableDoubleStateOf(waypoint.position.latLngDecimal.longitude) }
+    var name by remember { mutableStateOf(waypoint.name) }
+    var code by remember { mutableStateOf(waypoint.code) }
+    var markerType by remember { mutableStateOf(waypoint.markerType) }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.padding(horizontal = 8.dp)
     ) {
-        Text("Create Waypoint", style = MaterialTheme.typography.headlineSmall)
+        Text(waypoint.name, style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(8.dp))
         Divider()
-        Spacer(modifier = Modifier.height(32.dp))
-        Text(waypoint.name)
+        Spacer(modifier = Modifier.height(12.dp))
 
+        Row {
+            WaypointIconDropdown(onValueChange = { markerType = it })
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextField(
+            value = name,
+            onValueChange = { name = it },
+            label = { Text("Name") },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text, imeAction = ImeAction.Next
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        TextField(
+            value = code,
+            onValueChange = { code = it },
+            label = { Text("Shortcode") },
+            keyboardOptions = KeyboardOptions.Default.copy(
+                keyboardType = KeyboardType.Text, imeAction = ImeAction.Next
+            ),
+            modifier = Modifier.fillMaxWidth()
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row {
+            TextField(
+                value = Utils.RoundNumberToDp(latitude, 6).toString(),
+                onValueChange = { latitude = it.toDouble() },
+                label = { Text("Latitude") },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
+                ),
+                modifier = Modifier.weight(1.0f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            TextField(
+                value = Utils.RoundNumberToDp(longitude, 6).toString(),
+                onValueChange = { longitude = it.toDouble() },
+                label = { Text("Longitude") },
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
+                ),
+                modifier = Modifier.weight(1.0f)
+            )
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Row {
+            Button(onClick = {
+                val newWaypoint = waypoint
+                    .withPosition(Position(latitude, longitude))
+                    .withName(name)
+                    .withCode(code)
+                    .withMarkerType(markerType)
+
+                Log.d("AddWaypointSheet", "Creating waypoint '$name' at $latitude, $longitude")
+
+                onUpdateWaypoint(newWaypoint)
+            }, modifier = Modifier) {
+                Text("Update Waypoint")
+            }
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            OutlinedButton(onClick = {
+                onDeleteWaypoint(waypoint)
+            }) {
+                Text("Delete Waypoint")
+            }
+        }
 
     }
 }
@@ -59,4 +145,16 @@ fun ViewWaypointDetailSheet(
 @Preview(showSystemUi = true)
 @Composable
 fun ViewWaypointDetailSheetPreview() {
+    ViewWaypointDetailSheet(
+        waypoint = Waypoint(
+            0,
+            Position(-36.0, 174.0),
+            "Rangitoto",
+            "RANGI",
+            WaypointMarkerType.Castle,
+            Color.Magenta.toArgb().toColorLong()
+        ),
+        onUpdateWaypoint = {},
+        onDeleteWaypoint = {}
+    )
 }

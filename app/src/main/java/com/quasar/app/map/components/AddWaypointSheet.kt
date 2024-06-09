@@ -78,7 +78,7 @@ fun AddWaypointSheet(
             onValueChange = { name = it },
             label = { Text("Name") },
             keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
+                keyboardType = KeyboardType.Text, imeAction = ImeAction.Next
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -90,7 +90,7 @@ fun AddWaypointSheet(
             onValueChange = { code = it },
             label = { Text("Shortcode") },
             keyboardOptions = KeyboardOptions.Default.copy(
-                keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
+                keyboardType = KeyboardType.Text, imeAction = ImeAction.Next
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -136,6 +136,11 @@ fun AddWaypointSheet(
             onCreateWaypoint(input)
         }, modifier = Modifier.fillMaxWidth()) {
             Text("Create Waypoint")
+        }
+
+        OutlinedButton(onClick = { /*TODO*/ }) {
+            Text(text = "Delete Waypoint")
+            
         }
     }
 }

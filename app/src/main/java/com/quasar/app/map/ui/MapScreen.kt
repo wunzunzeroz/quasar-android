@@ -173,14 +173,14 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 })
 
                             BottomSheetContentType.GoToLocation -> TODO()
-                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(
-                                userLocation,
+                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(userLocation,
                                 tappedLocation.value,
                                 {
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
                                 })
 
-                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(tappedLocation.value,
+                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(
+                                tappedLocation.value,
                                 onCreateWaypoint = {
                                     coroutineScope.launch {
                                         viewModel.saveWaypoint(it)
@@ -189,7 +189,17 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 })
 
                             BottomSheetContentType.ViewWaypointDetail -> activeWaypoint?.let {
-                                ViewWaypointDetailSheet(it)
+                                ViewWaypointDetailSheet(it, onUpdateWaypoint = { wpt ->
+                                    coroutineScope.launch {
+                                        viewModel.updateWaypoint(wpt)
+                                        viewModel.setBottomSheetVisible(false)
+                                    }
+                                }, onDeleteWaypoint = { wpt ->
+                                    coroutineScope.launch {
+                                        viewModel.deleteWaypoint(wpt)
+                                        viewModel.setBottomSheetVisible(false)
+                                    }
+                                })
                             }
 
                             BottomSheetContentType.AddAnnotation -> TODO()

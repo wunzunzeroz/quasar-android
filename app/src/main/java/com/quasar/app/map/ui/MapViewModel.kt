@@ -32,11 +32,12 @@ class MapViewModel(
     private val _userLocation = MutableStateFlow(Point.fromLngLat(174.858, -36.787))
     val userlocation: StateFlow<Point> = _userLocation.asStateFlow()
 
-    val waypoints: StateFlow<List<Waypoint>> = waypointsRepository.getAllWaypoints().map{it}.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(5000),
-        initialValue = listOf()
-    )
+    val waypoints: StateFlow<List<Waypoint>> =
+        waypointsRepository.getAllWaypoints().map { it }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = listOf()
+        )
 
     fun setMapStyle(style: MapStyle) {
         _uiState.update { currentState ->
@@ -68,8 +69,17 @@ class MapViewModel(
 
     suspend fun saveWaypoint(input: CreateWaypointInput) {
         // TODO - Fix the ID thing
-        val waypoint = Waypoint(0, input.position, input.name, input.code, input.markerType, input.markerColor)
+        val waypoint =
+            Waypoint(0, input.position, input.name, input.code, input.markerType, input.markerColor)
 
         waypointsRepository.insertWaypoint(waypoint)
+    }
+
+    suspend fun updateWaypoint(waypoint: Waypoint) {
+        waypointsRepository.updateWaypoint(waypoint)
+    }
+
+    suspend fun deleteWaypoint(waypoint: Waypoint) {
+        waypointsRepository.deleteWaypoint(waypoint)
     }
 }
