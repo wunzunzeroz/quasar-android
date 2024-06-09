@@ -9,6 +9,7 @@ enum class BottomSheetContentType {
     GoToLocation,
     ViewLocationDetail,
     AddWaypoint,
+    ViewWaypointDetail,
     AddAnnotation,
     AddCircleAnnotation,
     AddPolylineAnnotation,

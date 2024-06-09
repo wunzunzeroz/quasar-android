@@ -39,6 +39,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -52,6 +53,7 @@ import com.firebase.ui.auth.AuthUI
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.gson.JsonElement
 import com.mapbox.common.location.LocationError
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapboxExperimental
@@ -79,6 +81,8 @@ import com.quasar.app.map.components.LocationDetailSheet
 import com.quasar.app.map.components.MapActionButton
 import com.quasar.app.map.components.PermissionRequest
 import com.quasar.app.map.components.SelectMapStyleSheet
+import com.quasar.app.map.components.ViewWaypointDetailSheet
+import com.quasar.app.map.models.Waypoint
 import com.quasar.app.map.styles.StyleLoader
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
@@ -144,9 +148,12 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
             }) { contentPadding ->
                 val tappedLocation = remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
                 val userLocation by viewModel.userlocation.collectAsState()
-                val coroutineScope = rememberCoroutineScope()
+                var activeWaypoint: Waypoint? by remember { mutableStateOf(null) }
 
                 val waypoints by viewModel.waypoints.collectAsState()
+
+                val coroutineScope = rememberCoroutineScope()
+
 
                 if (uiState.bottomSheetVisible) {
                     ModalBottomSheet(onDismissRequest = {
@@ -166,17 +173,19 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 tappedLocation.value,
                                 {
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
-                                }
-                            )
+                                })
 
-                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(
-                                tappedLocation.value,
+                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(tappedLocation.value,
                                 onCreateWaypoint = {
                                     coroutineScope.launch {
                                         viewModel.saveWaypoint(it)
                                         viewModel.setBottomSheetVisible(false)
                                     }
                                 })
+
+                            BottomSheetContentType.ViewWaypointDetail -> activeWaypoint?.let {
+                                ViewWaypointDetailSheet(it)
+                            }
 
                             BottomSheetContentType.AddAnnotation -> TODO()
                             BottomSheetContentType.AddCircleAnnotation -> TODO()
@@ -256,17 +265,25 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         val waypointAnnotations = waypoints.map {
                             Log.d(
                                 logTag,
-                                "Waypoint: ${it.name} - ${it.position.gridReference}, ${it.position.latLngDecimal}"
+                                "Waypoint: ${it.name} - ${it.position.gridReference}, ${it.position.latLngDecimal}, color: ${it.getColor()}"
                             )
-                            CircleAnnotationOptions()
-                                .withPoint(it.position.toPoint())
+                            CircleAnnotationOptions().withPoint(it.position.toPoint())
                                 .withCircleRadius(10.0)
-                                .withCircleColor(Color.Green.toArgb())
+//                                .withCircleColor(Color.Red.toArgb())
+                                .withCircleColor("#FF4f00")
+
                         }
 
-                        CircleAnnotationGroup(
-                            annotations = waypointAnnotations
-                        )
+                        CircleAnnotationGroup(annotations = waypointAnnotations, onClick = {
+                            val wpt = waypoints.first { w -> w.position.toPoint() == it.point }
+                            Log.d(logTag, "Waypoint tapped: ${wpt.name}")
+
+                            activeWaypoint = wpt
+                            viewModel.setBottomSheetContentType(BottomSheetContentType.ViewWaypointDetail)
+                            viewModel.setBottomSheetVisible(true)
+
+                            true
+                        })
 
                         if (tappedLocation.value != null) {
                             CircleAnnotation(
@@ -365,8 +382,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             }, MapAnimationOptions.mapAnimationOptions { duration(3000) })
                         })
                         Spacer(modifier = Modifier.height(8.dp))
-                        MapActionButton(
-                            icon = if (mapRotationEnabled.value) Icons.Filled.Navigation else Icons.Filled.RotateLeft,
+                        MapActionButton(icon = if (mapRotationEnabled.value) Icons.Filled.Navigation else Icons.Filled.RotateLeft,
                             onClick = {
                                 mapRotationEnabled.value = !mapRotationEnabled.value
                                 mapGesturesSettings.value = mapGesturesSettings.value.toBuilder()
