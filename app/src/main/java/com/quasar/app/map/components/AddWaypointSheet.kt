@@ -120,8 +120,6 @@ fun AddWaypointSheet(
         }
         Spacer(modifier = Modifier.height(8.dp))
 
-
-
         Button(onClick = {
             val input = CreateWaypointInput(
                 Position(latitude, longitude),
@@ -136,11 +134,6 @@ fun AddWaypointSheet(
             onCreateWaypoint(input)
         }, modifier = Modifier.fillMaxWidth()) {
             Text("Create Waypoint")
-        }
-
-        OutlinedButton(onClick = { /*TODO*/ }) {
-            Text(text = "Delete Waypoint")
-            
         }
     }
 }
