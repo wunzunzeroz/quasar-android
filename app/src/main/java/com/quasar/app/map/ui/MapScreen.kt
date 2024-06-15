@@ -5,13 +5,17 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.util.Log
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Cancel
 import androidx.compose.material.icons.filled.Check
@@ -57,6 +61,7 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.mapbox.common.location.LocationError
+import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.Style
@@ -77,6 +82,7 @@ import com.mapbox.maps.plugin.gestures.generated.GesturesSettings
 import com.mapbox.maps.plugin.locationcomponent.LocationConsumer
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
 import com.mapbox.maps.plugin.locationcomponent.location
+import com.mapbox.turf.TurfMeasurement
 import com.quasar.app.QuasarScreen
 import com.quasar.app.R
 import com.quasar.app.map.components.AddAnnotationSheet
@@ -90,6 +96,7 @@ import com.quasar.app.map.components.ViewWaypointDetailSheet
 import com.quasar.app.map.models.Waypoint
 import com.quasar.app.map.models.WaypointMarkerType
 import com.quasar.app.map.styles.StyleLoader
+import com.quasar.app.map.utils.Utils
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 
@@ -174,8 +181,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 })
 
                             BottomSheetContentType.GoToLocation -> TODO()
-                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(
-                                userLocation,
+                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(userLocation,
                                 tappedLocation.value,
                                 {
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
@@ -413,31 +419,26 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         }
 
                     }
-                    MapUiOverlay(
-                        onLayerButtonClick = {
-                            viewModel.setBottomSheetContentType(BottomSheetContentType.SelectMapStyle)
-                            viewModel.setBottomSheetVisible(true)
-                        },
-                        onLocationButtonClick = {
-                            mapViewportState.flyTo(cameraOptions = cameraOptions {
-                                center(userLocation)
-                                zoom(12.0)
-                            }, MapAnimationOptions.mapAnimationOptions { duration(3000) })
-                        },
-                        mapRotationEnabled = mapRotationEnabled.value,
-                        onRotateButtonClick = {
-                            mapRotationEnabled.value = !mapRotationEnabled.value
-                            mapGesturesSettings.value = mapGesturesSettings.value.toBuilder()
-                                .setRotateEnabled(mapRotationEnabled.value).build()
-                            Log.d(logTag, "Map rotation enabled: $mapRotationEnabled")
-                        },
-                        modifier = Modifier.padding(contentPadding)
+                    MapUiOverlay(onLayerButtonClick = {
+                        viewModel.setBottomSheetContentType(BottomSheetContentType.SelectMapStyle)
+                        viewModel.setBottomSheetVisible(true)
+                    }, onLocationButtonClick = {
+                        mapViewportState.flyTo(cameraOptions = cameraOptions {
+                            center(userLocation)
+                            zoom(12.0)
+                        }, MapAnimationOptions.mapAnimationOptions { duration(3000) })
+                    }, mapRotationEnabled = mapRotationEnabled.value, onRotateButtonClick = {
+                        mapRotationEnabled.value = !mapRotationEnabled.value
+                        mapGesturesSettings.value = mapGesturesSettings.value.toBuilder()
+                            .setRotateEnabled(mapRotationEnabled.value).build()
+                        Log.d(logTag, "Map rotation enabled: $mapRotationEnabled")
+                    }, modifier = Modifier.padding(contentPadding)
                     )
 
                     // TODO - Wrap in polymorphic handler
                     if (uiState.polylineCandidate.isNotEmpty()) {
 
-                        AnnotationConfirmation(
+                        AnnotationConfirmation(data = getDistance(uiState.polylineCandidate),
                             onConfirm = {
                                 viewModel.savePolylineCandidate()
                             },
@@ -456,6 +457,23 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
     }
 }
 
+fun getDistance(polyline: List<Point>): String {
+    if (polyline.isEmpty()) {
+        return ""
+    }
+
+    val lineString = LineString.fromLngLats(polyline)
+    val length = TurfMeasurement.length(lineString, "kilometers")
+
+    val km = Utils.RoundNumberToDp(length, 1)
+
+    if (km > 1) {
+        return "$km KM"
+    }
+
+    return "${km * 1000} M"
+}
+
 @Composable
 fun MapUiOverlay(
     onLayerButtonClick: () -> Unit,
@@ -465,8 +483,7 @@ fun MapUiOverlay(
     modifier: Modifier = Modifier
 ) {
     Column(
-        modifier = modifier
-            .padding(horizontal = 8.dp)
+        modifier = modifier.padding(horizontal = 8.dp)
     ) {
         MapActionButton(icon = Icons.Filled.Layers, onClick = onLayerButtonClick)
         Spacer(modifier = Modifier.height(8.dp))
@@ -481,9 +498,7 @@ fun MapUiOverlay(
 
 @Composable
 fun AnnotationConfirmation(
-    onConfirm: () -> Unit,
-    onCancel: () -> Unit,
-    modifier: Modifier = Modifier
+    data: String, onConfirm: () -> Unit, onCancel: () -> Unit, modifier: Modifier = Modifier
 ) {
     Column(
         verticalArrangement = Arrangement.Bottom,
@@ -492,9 +507,22 @@ fun AnnotationConfirmation(
             .fillMaxSize()
             .padding(horizontal = 8.dp, vertical = 16.dp)
     ) {
-        MapActionButton(icon = Icons.Filled.Check, onClick = onConfirm)
-        Spacer(modifier = Modifier.height(8.dp))
-        MapActionButton(icon = Icons.Filled.Cancel, onClick = onCancel)
+        Row(
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Box(
+                modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)
+            ) {
+                Text(data, modifier = Modifier.padding(8.dp))
+            }
+            Row {
+                MapActionButton(icon = Icons.Filled.Check, onClick = onConfirm)
+                Spacer(modifier = Modifier.width(8.dp))
+                MapActionButton(icon = Icons.Filled.Cancel, onClick = onCancel)
+            }
+        }
     }
 
 }
