@@ -3,10 +3,8 @@ package com.quasar.app.map.ui
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.BitmapFactory
 import android.graphics.drawable.BitmapDrawable
 import android.util.Log
-import androidx.annotation.DrawableRes
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cancel
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ExitToApp
 import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Menu
@@ -48,7 +48,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -67,8 +66,8 @@ import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGroup
-import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
+import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.maps.extension.compose.style.MapStyle
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
@@ -80,6 +79,7 @@ import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
 import com.mapbox.maps.plugin.locationcomponent.location
 import com.quasar.app.QuasarScreen
 import com.quasar.app.R
+import com.quasar.app.map.components.AddAnnotationSheet
 import com.quasar.app.map.components.AddWaypointSheet
 import com.quasar.app.map.components.BottomBar
 import com.quasar.app.map.components.LocationDetailSheet
@@ -152,6 +152,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 BottomBar()
             }) { contentPadding ->
                 val tappedLocation = remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
+                var longTappedLocation by remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
                 val userLocation by viewModel.userlocation.collectAsState()
                 var activeWaypoint: Waypoint? by remember { mutableStateOf(null) }
 
@@ -173,14 +174,14 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 })
 
                             BottomSheetContentType.GoToLocation -> TODO()
-                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(userLocation,
+                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(
+                                userLocation,
                                 tappedLocation.value,
                                 {
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
                                 })
 
-                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(
-                                tappedLocation.value,
+                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(tappedLocation.value,
                                 onCreateWaypoint = {
                                     coroutineScope.launch {
                                         viewModel.saveWaypoint(it)
@@ -202,7 +203,12 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 })
                             }
 
-                            BottomSheetContentType.AddAnnotation -> TODO()
+                            BottomSheetContentType.AddAnnotation -> AddAnnotationSheet(onAddPolyline = {
+                                viewModel.setLongTapActionType(LongTapAction.AddPointToPolyline)
+                                viewModel.setBottomSheetVisible(false)
+                                viewModel.addPointToPolylineCandidate(longTappedLocation)
+                            }, onAddPolygon = { /*TODO*/ }, onAddCircle = { /*TODO*/ })
+
                             BottomSheetContentType.AddCircleAnnotation -> TODO()
                             BottomSheetContentType.AddPolylineAnnotation -> TODO()
                             BottomSheetContentType.AddPolygonAnnotation -> TODO()
@@ -271,6 +277,22 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 "User long tapped map at Lat/Lng: ${it.latitude()}/${it.longitude()}"
                             )
 
+                            longTappedLocation = it
+
+                            when (uiState.longTapAction) {
+                                LongTapAction.ShowAnnotationMenu -> {
+                                    viewModel.setBottomSheetContentType(BottomSheetContentType.AddAnnotation)
+                                    viewModel.setBottomSheetVisible(true)
+                                }
+
+                                LongTapAction.AddPointToPolyline -> viewModel.addPointToPolylineCandidate(
+                                    it
+                                )
+
+                                LongTapAction.CreateCircleAtPoint -> TODO()
+                                LongTapAction.AddPointToPolygon -> TODO()
+                            }
+
                             true
                         },
                         style = { MapStyle(style = Style.SATELLITE_STREETS) },
@@ -296,6 +318,20 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
 
                             true
                         })
+
+                        // Polyline Candidate
+                        val polylinePoints = uiState.polylineCandidate.map {
+                            CircleAnnotationOptions().withPoint(it).withCircleRadius(6.0)
+                                .withCircleColor(Color.Magenta.toArgb())
+                        }
+                        PolylineAnnotation(
+                            uiState.polylineCandidate,
+                            lineWidth = 3.0,
+                            lineColorInt = Color.Magenta.toArgb()
+                        )
+                        CircleAnnotationGroup(annotations = polylinePoints)
+
+                        // TODO - Add tick and cross buttons to screen for save and discard
 
                         if (tappedLocation.value != null) {
                             CircleAnnotation(
@@ -377,36 +413,90 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         }
 
                     }
-                    Column(
-                        modifier = Modifier
-                            .padding(contentPadding)
-                            .padding(horizontal = 8.dp)
-                    ) {
-                        MapActionButton(icon = Icons.Filled.Layers, onClick = {
+                    MapUiOverlay(
+                        onLayerButtonClick = {
                             viewModel.setBottomSheetContentType(BottomSheetContentType.SelectMapStyle)
                             viewModel.setBottomSheetVisible(true)
-                        })
-                        Spacer(modifier = Modifier.height(8.dp))
-                        MapActionButton(icon = Icons.Filled.MyLocation, onClick = {
+                        },
+                        onLocationButtonClick = {
                             mapViewportState.flyTo(cameraOptions = cameraOptions {
                                 center(userLocation)
                                 zoom(12.0)
                             }, MapAnimationOptions.mapAnimationOptions { duration(3000) })
-                        })
-                        Spacer(modifier = Modifier.height(8.dp))
-                        MapActionButton(icon = if (mapRotationEnabled.value) Icons.Filled.Navigation else Icons.Filled.RotateLeft,
-                            onClick = {
-                                mapRotationEnabled.value = !mapRotationEnabled.value
-                                mapGesturesSettings.value = mapGesturesSettings.value.toBuilder()
-                                    .setRotateEnabled(mapRotationEnabled.value).build()
-                                Log.d(logTag, "Map rotation enabled: $mapRotationEnabled")
-                            })
+                        },
+                        mapRotationEnabled = mapRotationEnabled.value,
+                        onRotateButtonClick = {
+                            mapRotationEnabled.value = !mapRotationEnabled.value
+                            mapGesturesSettings.value = mapGesturesSettings.value.toBuilder()
+                                .setRotateEnabled(mapRotationEnabled.value).build()
+                            Log.d(logTag, "Map rotation enabled: $mapRotationEnabled")
+                        },
+                        modifier = Modifier.padding(contentPadding)
+                    )
+
+                    // TODO - Wrap in polymorphic handler
+                    if (uiState.polylineCandidate.isNotEmpty()) {
+
+                        AnnotationConfirmation(
+                            onConfirm = {
+                                viewModel.savePolylineCandidate()
+                            },
+                            onCancel = {
+                                // TODO - Create polymorphic annotation handler
+                                viewModel.clearPolylineCandidate()
+                                viewModel.setLongTapActionType(LongTapAction.ShowAnnotationMenu)
+                            },
+                            modifier = Modifier.padding(contentPadding)
+                        )
                     }
                 }
             }
         }
 
     }
+}
+
+@Composable
+fun MapUiOverlay(
+    onLayerButtonClick: () -> Unit,
+    onLocationButtonClick: () -> Unit,
+    mapRotationEnabled: Boolean,
+    onRotateButtonClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .padding(horizontal = 8.dp)
+    ) {
+        MapActionButton(icon = Icons.Filled.Layers, onClick = onLayerButtonClick)
+        Spacer(modifier = Modifier.height(8.dp))
+        MapActionButton(icon = Icons.Filled.MyLocation, onClick = onLocationButtonClick)
+        Spacer(modifier = Modifier.height(8.dp))
+        MapActionButton(
+            icon = if (mapRotationEnabled) Icons.Filled.Navigation else Icons.Filled.RotateLeft,
+            onClick = onRotateButtonClick
+        )
+    }
+}
+
+@Composable
+fun AnnotationConfirmation(
+    onConfirm: () -> Unit,
+    onCancel: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        verticalArrangement = Arrangement.Bottom,
+        horizontalAlignment = Alignment.End,
+        modifier = modifier
+            .fillMaxSize()
+            .padding(horizontal = 8.dp, vertical = 16.dp)
+    ) {
+        MapActionButton(icon = Icons.Filled.Check, onClick = onConfirm)
+        Spacer(modifier = Modifier.height(8.dp))
+        MapActionButton(icon = Icons.Filled.Cancel, onClick = onCancel)
+    }
+
 }
 
 private fun getMarkerBitmap(context: Context, markerType: WaypointMarkerType): Bitmap {

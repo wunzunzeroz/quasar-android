@@ -63,6 +63,38 @@ class MapViewModel(
         }
     }
 
+    fun setLongTapActionType(type: LongTapAction) {
+        _uiState.update { currentState ->
+            currentState.copy(
+                longTapAction = type
+            )
+        }
+    }
+
+    fun addPointToPolylineCandidate(point: Point) {
+        _uiState.update { currentState ->
+            val newList = mutableListOf<Point>()
+            newList.addAll(currentState.polylineCandidate)
+            newList.add(point)
+
+            currentState.copy(
+                polylineCandidate = newList
+            )
+        }
+    }
+
+    fun savePolylineCandidate() {
+        TODO()
+    }
+
+    fun clearPolylineCandidate() {
+        _uiState.update { currentState ->
+            currentState.copy(
+                polylineCandidate = listOf()
+            )
+        }
+    }
+
     fun setUserLocation(point: Point) {
         _userLocation.update { point }
     }
