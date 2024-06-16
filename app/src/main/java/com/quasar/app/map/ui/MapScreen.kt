@@ -244,6 +244,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     coroutineScope.launch {
                                         viewModel.savePolyline(polyline)
                                         viewModel.setBottomSheetVisible(false)
+                                        viewModel.setLongTapActionType(LongTapAction.ShowAnnotationMenu)
                                         viewModel.clearPolyCandidate()
                                     }
                                 })
@@ -254,6 +255,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     coroutineScope.launch {
                                         viewModel.savePolygon(polygon)
                                         viewModel.setBottomSheetVisible(false)
+                                        viewModel.setLongTapActionType(LongTapAction.ShowAnnotationMenu)
                                         viewModel.clearPolyCandidate()
                                     }
                                 }
