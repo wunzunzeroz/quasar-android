@@ -29,15 +29,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
 
-      - name: Print dir
-        run: echo "$GITHUB_WORKSPACE"
-
-
-      - name: Create gradle.properties
-        run: echo "QUASAR_MAPBOX_SECRET_TOKEN=${{ secrets.QUASAR_MAPBOX_SECRET_TOKEN }}" >> $GITHUB_WORKSPACE/gradle.properties
-
       - name: Build APK
-        run: ./gradlew assembleRelease
+        run: ./gradlew assembleRelease -PQUASAR_MAPBOX_SECRET_TOKEN=${{ secrets.QUASAR_MAPBOX_SECRET_TOKEN }}
 
       - name: Create Release
         id: create_release
