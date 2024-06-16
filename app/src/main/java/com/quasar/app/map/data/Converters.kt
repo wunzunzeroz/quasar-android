@@ -19,6 +19,20 @@ class Converters {
 
         return Position(lat.toDouble(), lng.toDouble())
     }
+
+    @TypeConverter
+    fun positionListToStringList(positions: List<Position>): String {
+        val strings = positions.map { positionToString(it) }
+        return strings.joinToString("|")
+    }
+
+    @TypeConverter
+    fun stringListToPositionList(str: String): List<Position> {
+       val positions = str.split("|").map { stringToPosition(it) }
+
+        return positions
+    }
+
     @TypeConverter
     fun fromColor(color: Color): Long {
         return color.toArgb().toLong() // Convert Color to Long for storage

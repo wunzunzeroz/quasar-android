@@ -9,6 +9,7 @@ import com.quasar.app.map.data.PolylinesRepository
 import com.quasar.app.map.data.SketchRepository
 import com.quasar.app.map.data.WaypointsRepository
 import com.quasar.app.map.models.CreateWaypointInput
+import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Waypoint
 import com.quasar.app.map.styles.MapStyle
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,10 +31,17 @@ class MapViewModel(
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     private val _userLocation = MutableStateFlow(Point.fromLngLat(174.858, -36.787))
-    val userlocation: StateFlow<Point> = _userLocation.asStateFlow()
+    val userLocation: StateFlow<Point> = _userLocation.asStateFlow()
 
     val waypoints: StateFlow<List<Waypoint>> =
         waypointsRepository.getAllWaypoints().map { it }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = listOf()
+        )
+
+    val polylines: StateFlow<List<Polyline>> =
+        polylinesRepository.getAll().map { it }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = listOf()
@@ -83,8 +91,12 @@ class MapViewModel(
         }
     }
 
-    fun savePolylineCandidate() {
-        TODO()
+    fun undoPolyLineCandidate() {
+        _uiState.update { cur ->
+            cur.copy(
+                polylineCandidate = cur.polylineCandidate.dropLast(1)
+            )
+        }
     }
 
     fun clearPolylineCandidate() {
@@ -100,9 +112,13 @@ class MapViewModel(
     }
 
     suspend fun saveWaypoint(input: CreateWaypointInput) {
-        // TODO - Fix the ID thing
-        val waypoint =
-            Waypoint(0, input.position, input.name, input.code, input.markerType, input.markerColor)
+        val waypoint = Waypoint(
+            position = input.position,
+            name = input.name,
+            code = input.code,
+            markerType = input.markerType,
+            markerColor = input.markerColor
+        )
 
         waypointsRepository.insertWaypoint(waypoint)
     }
@@ -114,4 +130,9 @@ class MapViewModel(
     suspend fun deleteWaypoint(waypoint: Waypoint) {
         waypointsRepository.deleteWaypoint(waypoint)
     }
+
+    suspend fun savePolyline(polyline: Polyline) {
+        polylinesRepository.insert(polyline)
+    }
+
 }

@@ -39,12 +39,13 @@ val appModule = module {
     // Repositories
     single<WaypointsRepository> { WaypointsRepositoryImpl(get()) }
     single<CirclesRepository> { CirclesRepositoryImpl() }
-    single<PolylinesRepository> { PolylinesRepositoryImpl() }
+    single<PolylinesRepository> { PolylinesRepositoryImpl(get()) }
     single<PolygonsRepository> { PolygonsRepositoryImpl() }
     single<SketchRepository> { SketchRepositoryImpl() }
 
     // DAO
     single { get<AppDatabase>().waypointDao() }
+    single { get<AppDatabase>().polylineDao() }
 
     // DB
     single {

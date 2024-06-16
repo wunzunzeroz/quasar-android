@@ -25,6 +25,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.MyLocation
 import androidx.compose.material.icons.filled.Navigation
 import androidx.compose.material.icons.filled.RotateLeft
+import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -93,8 +94,10 @@ import com.quasar.app.map.components.BottomBar
 import com.quasar.app.map.components.LocationDetailSheet
 import com.quasar.app.map.components.MapActionButton
 import com.quasar.app.map.components.PermissionRequest
+import com.quasar.app.map.components.SavePolylineSheet
 import com.quasar.app.map.components.SelectMapStyleSheet
 import com.quasar.app.map.components.ViewWaypointDetailSheet
+import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Waypoint
 import com.quasar.app.map.models.WaypointMarkerType
 import com.quasar.app.map.styles.StyleLoader
@@ -162,10 +165,11 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
             }) { contentPadding ->
                 val tappedLocation = remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
                 var longTappedLocation by remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
-                val userLocation by viewModel.userlocation.collectAsState()
+                val userLocation by viewModel.userLocation.collectAsState()
                 var activeWaypoint: Waypoint? by remember { mutableStateOf(null) }
 
                 val waypoints by viewModel.waypoints.collectAsState()
+                val polylines by viewModel.polylines.collectAsState()
 
                 val coroutineScope = rememberCoroutineScope()
 
@@ -183,13 +187,15 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 })
 
                             BottomSheetContentType.GoToLocation -> TODO()
-                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(userLocation,
+                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(
+                                userLocation,
                                 tappedLocation.value,
                                 {
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
                                 })
 
-                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(tappedLocation.value,
+                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(
+                                tappedLocation.value,
                                 onCreateWaypoint = {
                                     coroutineScope.launch {
                                         viewModel.saveWaypoint(it)
@@ -218,7 +224,15 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             }, onAddPolygon = { /*TODO*/ }, onAddCircle = { /*TODO*/ })
 
                             BottomSheetContentType.AddCircleAnnotation -> TODO()
-                            BottomSheetContentType.AddPolylineAnnotation -> TODO()
+                            BottomSheetContentType.AddPolylineAnnotation -> SavePolylineSheet(points = uiState.polylineCandidate,
+                                onSave = { polyline ->
+                                    coroutineScope.launch {
+                                        viewModel.savePolyline(polyline)
+                                        viewModel.setBottomSheetVisible(false)
+                                        viewModel.clearPolylineCandidate()
+                                    }
+                                })
+
                             BottomSheetContentType.AddPolygonAnnotation -> TODO()
                         }
                     }
@@ -309,6 +323,17 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         modifier = Modifier.fillMaxSize(),
                     ) {
 
+                        // TODO - Extract these into composables
+                        val testList = listOf(Point.fromLngLat(174.8144, -36.8281), Point.fromLngLat(174.81801, -36.7935), Point.fromLngLat(174.8337, -36.7559))
+
+                        polylines.forEach {
+                            if (it.points().isNotEmpty()) {
+                                MapPolyline(polyline = it.points())
+                            }
+                        }
+                        MapPolyline(polyline = testList)
+
+
                         val waypointAnnotations = waypoints.map {
                             Log.d(
                                 logTag,
@@ -328,20 +353,6 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
 
                             true
                         })
-
-                        // Polyline Candidate
-                        val polylinePoints = uiState.polylineCandidate.map {
-                            CircleAnnotationOptions().withPoint(it).withCircleRadius(6.0)
-                                .withCircleColor(Color.Magenta.toArgb())
-                        }
-                        PolylineAnnotation(
-                            uiState.polylineCandidate,
-                            lineWidth = 3.0,
-                            lineColorInt = Color.Magenta.toArgb()
-                        )
-                        CircleAnnotationGroup(annotations = polylinePoints)
-
-                        // TODO - Add tick and cross buttons to screen for save and discard
 
                         if (tappedLocation.value != null) {
                             CircleAnnotation(
@@ -422,6 +433,10 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             mapView.mapboxMap.loadStyle(style)
                         }
 
+                        // Candidate:
+                        MapPolyline(uiState.polylineCandidate)
+                        // From Repo:
+                        MapPolylines(polylines)
                     }
                     MapUiOverlay(onLayerButtonClick = {
                         viewModel.setBottomSheetContentType(BottomSheetContentType.SelectMapStyle)
@@ -442,9 +457,14 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                     // TODO - Wrap in polymorphic handler
                     if (uiState.polylineCandidate.isNotEmpty()) {
 
-                        AnnotationConfirmation(data = getDistance(uiState.polylineCandidate),
+                        AnnotationConfirmation(
+                            data = getDistance(uiState.polylineCandidate),
                             onConfirm = {
-                                viewModel.savePolylineCandidate()
+                                viewModel.setBottomSheetContentType(BottomSheetContentType.AddPolylineAnnotation)
+                                viewModel.setBottomSheetVisible(true)
+                            },
+                            onUndo = {
+                                viewModel.undoPolyLineCandidate()
                             },
                             onCancel = {
                                 // TODO - Create polymorphic annotation handler
@@ -459,6 +479,31 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
         }
 
     }
+}
+
+@Composable
+fun MapPolylines(polylines: List<Polyline>) {
+    Log.d("MapScreen", "Polylines: ${polylines.map { it.name }}")
+    polylines.forEach {
+        MapPolyline(it.points(), Color.Cyan)
+    }
+}
+
+@OptIn(MapboxExperimental::class)
+@Composable
+fun MapPolyline(polyline: List<Point>, color: Color = Color.Magenta) {
+    Log.d("MapScreen", "Point count: ${polyline.count()}")
+
+    val polylinePoints = polyline.map {
+        CircleAnnotationOptions().withPoint(it).withCircleRadius(6.0)
+            .withCircleColor(color.toArgb())
+    }
+    PolylineAnnotation(
+        polyline,
+        lineWidth = 3.0,
+        lineColorInt = color.toArgb()
+    )
+    CircleAnnotationGroup(annotations = polylinePoints)
 }
 
 fun getDistance(polyline: List<Point>): String {
@@ -502,7 +547,11 @@ fun MapUiOverlay(
 
 @Composable
 fun AnnotationConfirmation(
-    data: String, onConfirm: () -> Unit, onCancel: () -> Unit, modifier: Modifier = Modifier
+    data: String,
+    onConfirm: () -> Unit,
+    onUndo: () -> Unit,
+    onCancel: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     Column(
         verticalArrangement = Arrangement.Bottom,
@@ -522,9 +571,11 @@ fun AnnotationConfirmation(
                 Text(data, modifier = Modifier.padding(8.dp))
             }
             Row {
-                MapActionButton(icon = Icons.Filled.Check, onClick = onConfirm)
-                Spacer(modifier = Modifier.width(8.dp))
                 MapActionButton(icon = Icons.Filled.Cancel, onClick = onCancel)
+                Spacer(modifier = Modifier.width(8.dp))
+                MapActionButton(icon = Icons.Filled.Undo, onClick = onUndo)
+                Spacer(modifier = Modifier.width(8.dp))
+                MapActionButton(icon = Icons.Filled.Check, onClick = onConfirm)
             }
         }
     }
