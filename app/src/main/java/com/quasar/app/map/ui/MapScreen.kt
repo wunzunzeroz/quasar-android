@@ -51,7 +51,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -228,6 +230,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
 
                 // Map Container
                 Box(modifier = Modifier.fillMaxSize()) {
+                    val hapticFeedback = LocalHapticFeedback.current
                     val mapViewportState = remember {
                         MapViewportState().apply {
                             setCameraOptions {
@@ -282,6 +285,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 logTag,
                                 "User long tapped map at Lat/Lng: ${it.latitude()}/${it.longitude()}"
                             )
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
 
                             longTappedLocation = it
 
