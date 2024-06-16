@@ -7,11 +7,14 @@ import androidx.compose.ui.Modifier
 enum class BottomSheetContentType {
     SelectMapStyle,
     GoToLocation,
-    ViewLocationDetail,
+
     AddWaypoint,
-    ViewWaypointDetail,
     AddAnnotation,
     AddCircleAnnotation,
     AddPolylineAnnotation,
     AddPolygonAnnotation,
+
+    ViewLocationDetail,
+    ViewWaypointDetail,
+    ViewPolylineDetail,
 }

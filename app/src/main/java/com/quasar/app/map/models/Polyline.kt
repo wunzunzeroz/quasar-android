@@ -2,7 +2,10 @@ package com.quasar.app.map.models
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
+import com.mapbox.turf.TurfMeasurement
+import com.quasar.app.map.utils.Utils
 
 @Entity
 data class Polyline(
@@ -10,8 +13,25 @@ data class Polyline(
     val id: Int = 0,
     val name: String,
     val positions: List<Position>
-    ) {
+) {
     fun points(): List<Point> {
         return positions.map { it.toPoint() }
+    }
+
+    fun distance(): String {
+        if (positions.isEmpty()) {
+            return ""
+        }
+
+        val lineString = LineString.fromLngLats(points())
+        val length = TurfMeasurement.length(lineString, "kilometers")
+
+        val km = Utils.RoundNumberToDp(length, 1)
+
+        if (km > 1) {
+            return "$km KM"
+        }
+
+        return "${km * 1000} M"
     }
 }

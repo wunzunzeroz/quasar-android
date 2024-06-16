@@ -39,7 +39,7 @@ class Position(latitude: Double, longitude: Double) {
 
     companion object {
         fun fromPoint(point: Point): Position {
-            return Position(point.latitude(), point.latitude())
+            return Position(point.latitude(), point.longitude())
         }
 
         fun fromGridRef(input: GridReference): Position {

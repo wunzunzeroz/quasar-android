@@ -76,11 +76,13 @@ import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGroup
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
+import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotationGroup
 import com.mapbox.maps.extension.compose.style.MapStyle
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.PolylineAnnotationOptions
 import com.mapbox.maps.plugin.gestures.generated.GesturesSettings
 import com.mapbox.maps.plugin.locationcomponent.LocationConsumer
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
@@ -96,6 +98,7 @@ import com.quasar.app.map.components.MapActionButton
 import com.quasar.app.map.components.PermissionRequest
 import com.quasar.app.map.components.SavePolylineSheet
 import com.quasar.app.map.components.SelectMapStyleSheet
+import com.quasar.app.map.components.ViewPolylineSheet
 import com.quasar.app.map.components.ViewWaypointDetailSheet
 import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Waypoint
@@ -166,7 +169,9 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 val tappedLocation = remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
                 var longTappedLocation by remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
                 val userLocation by viewModel.userLocation.collectAsState()
+
                 var activeWaypoint: Waypoint? by remember { mutableStateOf(null) }
+                var activePolyline: Polyline? by remember { mutableStateOf(null) }
 
                 val waypoints by viewModel.waypoints.collectAsState()
                 val polylines by viewModel.polylines.collectAsState()
@@ -234,6 +239,11 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 })
 
                             BottomSheetContentType.AddPolygonAnnotation -> TODO()
+                            BottomSheetContentType.ViewPolylineDetail -> activePolyline?.let {
+                                ViewPolylineSheet(
+                                    polyline = it
+                                )
+                            }
                         }
                     }
                 }
@@ -324,14 +334,6 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                     ) {
 
                         // TODO - Extract these into composables
-                        val testList = listOf(Point.fromLngLat(174.8144, -36.8281), Point.fromLngLat(174.81801, -36.7935), Point.fromLngLat(174.8337, -36.7559))
-
-                        polylines.forEach {
-                            if (it.points().isNotEmpty()) {
-                                MapPolyline(polyline = it.points())
-                            }
-                        }
-                        MapPolyline(polyline = testList)
 
 
                         val waypointAnnotations = waypoints.map {
@@ -436,7 +438,11 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         // Candidate:
                         MapPolyline(uiState.polylineCandidate)
                         // From Repo:
-                        MapPolylines(polylines)
+                        MapPolylines(polylines, onLineClicked = {
+                            activePolyline = it
+                            viewModel.setBottomSheetContentType(BottomSheetContentType.ViewPolylineDetail)
+                            viewModel.setBottomSheetVisible(true)
+                        })
                     }
                     MapUiOverlay(onLayerButtonClick = {
                         viewModel.setBottomSheetContentType(BottomSheetContentType.SelectMapStyle)
@@ -481,12 +487,34 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
     }
 }
 
+@OptIn(MapboxExperimental::class)
 @Composable
-fun MapPolylines(polylines: List<Polyline>) {
-    Log.d("MapScreen", "Polylines: ${polylines.map { it.name }}")
-    polylines.forEach {
-        MapPolyline(it.points(), Color.Cyan)
+fun MapPolylines(polylines: List<Polyline>, onLineClicked: (Polyline) -> Unit) {
+    val lines = polylines.map {
+        PolylineAnnotationOptions().withPoints(it.points()).withLineColor(Color.Cyan.toArgb())
+            .withLineWidth(3.0)
     }
+
+    val allPoints = mutableListOf<Point>()
+    polylines.forEach { allPoints.addAll(it.points()) }
+
+    val points = allPoints.map {
+        CircleAnnotationOptions().withPoint(it).withCircleRadius(6.0)
+            .withCircleColor(Color.Cyan.toArgb())
+    }
+
+    PolylineAnnotationGroup(annotations = lines, onClick = {
+        val line = polylines.first { line -> line.points() == it.points }
+        onLineClicked(line)
+
+        true
+    })
+    CircleAnnotationGroup(annotations = points, onClick = {
+        val line = polylines.first { line -> line.points().contains(it.point) }
+        onLineClicked(line)
+
+        true
+    })
 }
 
 @OptIn(MapboxExperimental::class)
@@ -499,9 +527,7 @@ fun MapPolyline(polyline: List<Point>, color: Color = Color.Magenta) {
             .withCircleColor(color.toArgb())
     }
     PolylineAnnotation(
-        polyline,
-        lineWidth = 3.0,
-        lineColorInt = color.toArgb()
+        polyline, lineWidth = 3.0, lineColorInt = color.toArgb()
     )
     CircleAnnotationGroup(annotations = polylinePoints)
 }
