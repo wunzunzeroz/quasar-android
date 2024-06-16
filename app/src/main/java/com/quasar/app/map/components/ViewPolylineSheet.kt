@@ -29,7 +29,7 @@ import com.quasar.app.map.models.Position
 
 @Composable
 fun ViewPolylineSheet(
-    polyline: Polyline, onDelete: (Polyline) -> Unit = {}, modifier: Modifier = Modifier
+    polyline: Polyline, onDelete: (Polyline) -> Unit, modifier: Modifier = Modifier
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -56,5 +56,5 @@ fun ViewPolylineSheet(
 @Preview(showSystemUi = true)
 @Composable
 fun ViewPolylineSheetPreview() {
-    ViewPolylineSheet(Polyline(name = "Test line", positions = listOf()))
+    ViewPolylineSheet(Polyline(name = "Test line", positions = listOf()), onDelete = {})
 }

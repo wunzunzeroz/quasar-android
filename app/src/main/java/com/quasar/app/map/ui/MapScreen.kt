@@ -199,8 +199,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
                                 })
 
-                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(
-                                tappedLocation.value,
+                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(tappedLocation.value,
                                 onCreateWaypoint = {
                                     coroutineScope.launch {
                                         viewModel.saveWaypoint(it)
@@ -229,7 +228,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             }, onAddPolygon = { /*TODO*/ }, onAddCircle = { /*TODO*/ })
 
                             BottomSheetContentType.AddCircleAnnotation -> TODO()
-                            BottomSheetContentType.AddPolylineAnnotation -> SavePolylineSheet(points = uiState.polylineCandidate,
+                            BottomSheetContentType.AddPolylineAnnotation -> SavePolylineSheet(
+                                points = uiState.polylineCandidate,
                                 onSave = { polyline ->
                                     coroutineScope.launch {
                                         viewModel.savePolyline(polyline)
@@ -240,9 +240,12 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
 
                             BottomSheetContentType.AddPolygonAnnotation -> TODO()
                             BottomSheetContentType.ViewPolylineDetail -> activePolyline?.let {
-                                ViewPolylineSheet(
-                                    polyline = it
-                                )
+                                ViewPolylineSheet(polyline = it, onDelete = {
+                                    coroutineScope.launch {
+                                        viewModel.deletePolyline(it)
+                                        viewModel.setBottomSheetVisible(false)
+                                    }
+                                })
                             }
                         }
                     }
@@ -500,7 +503,7 @@ fun MapPolylines(polylines: List<Polyline>, onLineClicked: (Polyline) -> Unit) {
 
     val points = allPoints.map {
         CircleAnnotationOptions().withPoint(it).withCircleRadius(6.0)
-            .withCircleColor(Color.Cyan.toArgb())
+            .withCircleColor(Color.Cyan.toArgb()).withDraggable(false) // TODO - Support draggables
     }
 
     PolylineAnnotationGroup(annotations = lines, onClick = {

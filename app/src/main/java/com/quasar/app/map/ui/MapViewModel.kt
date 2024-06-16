@@ -135,4 +135,8 @@ class MapViewModel(
         polylinesRepository.insert(polyline)
     }
 
+    suspend fun deletePolyline(polyline: Polyline) {
+        polylinesRepository.delete(polyline)
+    }
+
 }
