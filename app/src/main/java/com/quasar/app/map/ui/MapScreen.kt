@@ -77,6 +77,7 @@ import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGroup
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
 import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotation
+import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotationGroup
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotationGroup
 import com.mapbox.maps.extension.compose.style.MapStyle
@@ -84,6 +85,7 @@ import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.PolygonAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.PolylineAnnotationOptions
 import com.mapbox.maps.plugin.gestures.generated.GesturesSettings
 import com.mapbox.maps.plugin.locationcomponent.LocationConsumer
@@ -93,6 +95,7 @@ import com.mapbox.turf.TurfMeasurement
 import com.quasar.app.QuasarScreen
 import com.quasar.app.R
 import com.quasar.app.map.components.AddAnnotationSheet
+import com.quasar.app.map.components.AddPolygonSheet
 import com.quasar.app.map.components.AddWaypointSheet
 import com.quasar.app.map.components.BottomBar
 import com.quasar.app.map.components.LocationDetailSheet
@@ -177,6 +180,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
 
                 val waypoints by viewModel.waypoints.collectAsState()
                 val polylines by viewModel.polylines.collectAsState()
+                val polygons by viewModel.polygons.collectAsState()
 
                 val coroutineScope = rememberCoroutineScope()
 
@@ -240,11 +244,21 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     coroutineScope.launch {
                                         viewModel.savePolyline(polyline)
                                         viewModel.setBottomSheetVisible(false)
-                                        viewModel.clearPolylineCandidate()
+                                        viewModel.clearPolyCandidate()
                                     }
                                 })
 
-                            BottomSheetContentType.AddPolygonAnnotation -> TODO()
+                            BottomSheetContentType.AddPolygonAnnotation -> AddPolygonSheet(
+                                points = uiState.polyCandidate,
+                                onSave = { polygon ->
+                                    coroutineScope.launch {
+                                        viewModel.savePolygon(polygon)
+                                        viewModel.setBottomSheetVisible(false)
+                                        viewModel.clearPolyCandidate()
+                                    }
+                                }
+                            )
+
                             BottomSheetContentType.ViewPolylineDetail -> activePolyline?.let {
                                 ViewPolylineSheet(polyline = it, onDelete = {
                                     coroutineScope.launch {
@@ -460,6 +474,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             viewModel.setBottomSheetContentType(BottomSheetContentType.ViewPolylineDetail)
                             viewModel.setBottomSheetVisible(true)
                         })
+                        MapPolygons(polygons, onLineClicked = {})
                     }
                     MapUiOverlay(onLayerButtonClick = {
                         viewModel.setBottomSheetContentType(BottomSheetContentType.SelectMapStyle)
@@ -483,7 +498,11 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 uiState.polyCandidate
                             ) else getArea(uiState.polyCandidate),
                             onConfirm = {
-                                viewModel.setBottomSheetContentType(BottomSheetContentType.AddPolylineAnnotation)
+                                if (uiState.longTapAction == LongTapAction.AddPointToPolyline) {
+                                    viewModel.setBottomSheetContentType(BottomSheetContentType.AddPolylineAnnotation)
+                                } else {
+                                    viewModel.setBottomSheetContentType(BottomSheetContentType.AddPolygonAnnotation)
+                                }
                                 viewModel.setBottomSheetVisible(true)
                             },
                             onUndo = {
@@ -491,7 +510,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             },
                             onCancel = {
                                 // TODO - Create polymorphic annotation handler
-                                viewModel.clearPolylineCandidate()
+                                viewModel.clearPolyCandidate()
                                 viewModel.setLongTapActionType(LongTapAction.ShowAnnotationMenu)
                             },
                             modifier = Modifier.padding(contentPadding)
@@ -528,6 +547,37 @@ fun MapPolylines(polylines: List<Polyline>, onLineClicked: (Polyline) -> Unit) {
     })
     CircleAnnotationGroup(annotations = points, onClick = {
         val line = polylines.first { line -> line.points().contains(it.point) }
+        onLineClicked(line)
+
+        true
+    })
+}
+
+@OptIn(MapboxExperimental::class)
+@Composable
+fun MapPolygons(
+    polygons: List<com.quasar.app.map.models.Polygon>,
+    onLineClicked: (com.quasar.app.map.models.Polygon) -> Unit
+) {
+
+    val allPoints = mutableListOf<Point>()
+    polygons.forEach { allPoints.addAll(it.points()) }
+
+    val points = allPoints.map {
+        CircleAnnotationOptions().withPoint(it).withCircleRadius(4.0)
+            .withCircleColor(Color.Cyan.toArgb()).withCircleOpacity(0.7)
+            .withDraggable(false) // TODO - Support draggables
+    }
+
+    val polys = polygons.map {
+        PolygonAnnotationOptions().withPoints(listOf(it.points()))
+            .withFillColor(Color.Cyan.toArgb()).withFillOpacity(0.5)
+    }
+
+    PolygonAnnotationGroup(annotations = polys)
+
+    CircleAnnotationGroup(annotations = points, onClick = {
+        val line = polygons.first { line -> line.points().contains(it.point) }
         onLineClicked(line)
 
         true

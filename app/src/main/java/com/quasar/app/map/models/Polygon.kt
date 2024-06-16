@@ -1,4 +1,18 @@
 package com.quasar.app.map.models
 
-class Polygon {
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import com.mapbox.geojson.Point
+
+@Entity
+data class Polygon(
+    @PrimaryKey(autoGenerate = true)
+    val id: Int = 0,
+    val name: String,
+    val positions: List<Position>
+) {
+
+    fun points(): List<Point> {
+        return positions.map { it.toPoint() }
+    }
 }

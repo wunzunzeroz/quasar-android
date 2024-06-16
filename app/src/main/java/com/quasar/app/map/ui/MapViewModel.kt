@@ -9,6 +9,7 @@ import com.quasar.app.map.data.PolylinesRepository
 import com.quasar.app.map.data.SketchRepository
 import com.quasar.app.map.data.WaypointsRepository
 import com.quasar.app.map.models.CreateWaypointInput
+import com.quasar.app.map.models.Polygon
 import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Waypoint
 import com.quasar.app.map.styles.MapStyle
@@ -42,6 +43,13 @@ class MapViewModel(
 
     val polylines: StateFlow<List<Polyline>> =
         polylinesRepository.getAll().map { it }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = listOf()
+        )
+
+    val polygons: StateFlow<List<Polygon>> =
+        polygonsRepository.getAll().map { it }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = listOf()
@@ -99,7 +107,7 @@ class MapViewModel(
         }
     }
 
-    fun clearPolylineCandidate() {
+    fun clearPolyCandidate() {
         _uiState.update { currentState ->
             currentState.copy(
                 polyCandidate = listOf()
@@ -139,4 +147,11 @@ class MapViewModel(
         polylinesRepository.delete(polyline)
     }
 
+    suspend fun savePolygon(polygon: Polygon) {
+        polygonsRepository.insert(polygon)
+    }
+
+    suspend fun deletePolygon(polygon: Polygon) {
+        polygonsRepository.delete(polygon)
+    }
 }
