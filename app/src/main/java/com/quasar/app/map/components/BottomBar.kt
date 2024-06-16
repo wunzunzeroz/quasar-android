@@ -7,6 +7,7 @@ import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Text
@@ -16,7 +17,7 @@ import androidx.compose.runtime.remember
 
 @Composable
 fun BottomBar() {
-    NavigationBar() {
+    NavigationBar(containerColor = MaterialTheme.colorScheme.primaryContainer) {
         val selectedItem = remember {
             mutableIntStateOf(0)
         }
@@ -33,7 +34,7 @@ fun BottomBar() {
         )
         items.forEachIndexed { index, item ->
             NavigationBarItem(
-                icon = { Icon(icons[index], contentDescription = item) },
+                icon = { Icon(icons[index], contentDescription = item, tint = MaterialTheme.colorScheme.primary) },
                 label = { Text(item) },
                 selected = selectedItem.intValue == index,
                 onClick = { selectedItem.intValue = index },

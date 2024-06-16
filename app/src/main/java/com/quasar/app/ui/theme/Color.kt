@@ -11,3 +11,8 @@ val PurpleGrey40 = Color(0xFF625b71)
 val Pink40 = Color(0xFF7D5260)
 
 val AerospaceOrange = Color(0xFFFF4F00)
+val NeonOrange = Color(0xFFFF5F1F)
+
+val ElectricIndigo = Color(0xFF6F00FF)
+val HotMagenta = Color(0xFFFF1DCE)
+val EerieBlack = Color(0xFF1B2021)

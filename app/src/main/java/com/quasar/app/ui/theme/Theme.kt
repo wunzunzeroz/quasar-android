@@ -12,9 +12,27 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme(
-    primary = AerospaceOrange,
+    primary = NeonOrange,
     secondary = PurpleGrey80,
-    tertiary = Pink80
+    tertiary = Pink80,
+
+    onPrimary = NeonOrange,
+    primaryContainer = NeonOrange,
+    secondaryContainer = NeonOrange,
+    tertiaryContainer = NeonOrange,
+)
+
+private val DarkSarColorScheme = darkColorScheme(
+    primary = NeonOrange,
+    primaryContainer = EerieBlack,
+)
+
+private val DarkQuasarColorScheme = darkColorScheme(
+    primary = HotMagenta,
+    onPrimary = EerieBlack,
+    primaryContainer = EerieBlack,
+    background = NeonOrange,
+    surface = EerieBlack,
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -41,12 +59,15 @@ fun QUASARTheme(
     content: @Composable () -> Unit
 ) {
     val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
+        dynamicColor -> {
             val context = LocalContext.current
+            // Dynamic sets the colors based on the user's wallpaper
             if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         }
 
-        darkTheme -> DarkColorScheme
+//        darkTheme -> DarkColorScheme
+        darkTheme -> DarkSarColorScheme
+//        darkTheme -> DarkQuasarColorScheme
         else -> LightColorScheme
     }
 
