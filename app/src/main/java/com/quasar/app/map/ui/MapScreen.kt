@@ -373,8 +373,6 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                     ) {
 
                         // TODO - Extract these into composables
-
-
                         val waypointAnnotations = waypoints.map {
                             Log.d(
                                 logTag,
