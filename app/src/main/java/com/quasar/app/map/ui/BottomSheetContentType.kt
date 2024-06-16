@@ -17,4 +17,5 @@ enum class BottomSheetContentType {
     ViewLocationDetail,
     ViewWaypointDetail,
     ViewPolylineDetail,
+    ViewPolygonDetail,
 }

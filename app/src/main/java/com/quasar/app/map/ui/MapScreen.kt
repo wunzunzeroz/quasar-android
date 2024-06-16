@@ -66,7 +66,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.mapbox.common.location.LocationError
 import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
-import com.mapbox.geojson.Polygon
+import com.mapbox.geojson.Polygon as GeoJsonPolygon
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.Style
 import com.mapbox.maps.dsl.cameraOptions
@@ -103,6 +103,7 @@ import com.quasar.app.map.components.MapActionButton
 import com.quasar.app.map.components.PermissionRequest
 import com.quasar.app.map.components.SavePolylineSheet
 import com.quasar.app.map.components.SelectMapStyleSheet
+import com.quasar.app.map.components.ViewPolygonSheet
 import com.quasar.app.map.components.ViewPolylineSheet
 import com.quasar.app.map.components.ViewWaypointDetailSheet
 import com.quasar.app.map.models.Polyline
@@ -112,6 +113,7 @@ import com.quasar.app.map.styles.StyleLoader
 import com.quasar.app.map.utils.Utils
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
+import com.quasar.app.map.models.Polygon
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -177,6 +179,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
 
                 var activeWaypoint: Waypoint? by remember { mutableStateOf(null) }
                 var activePolyline: Polyline? by remember { mutableStateOf(null) }
+                var activePolygon: Polygon? by remember { mutableStateOf(null) }
 
                 val waypoints by viewModel.waypoints.collectAsState()
                 val polylines by viewModel.polylines.collectAsState()
@@ -265,6 +268,15 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 ViewPolylineSheet(polyline = it, onDelete = {
                                     coroutineScope.launch {
                                         viewModel.deletePolyline(it)
+                                        viewModel.setBottomSheetVisible(false)
+                                    }
+                                })
+                            }
+
+                            BottomSheetContentType.ViewPolygonDetail -> activePolygon?.let { polygon ->
+                                ViewPolygonSheet(polygon = polygon, onDelete = {
+                                    coroutineScope.launch {
+                                        viewModel.deletePolygon(it)
                                         viewModel.setBottomSheetVisible(false)
                                     }
                                 })
@@ -476,7 +488,11 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             viewModel.setBottomSheetContentType(BottomSheetContentType.ViewPolylineDetail)
                             viewModel.setBottomSheetVisible(true)
                         })
-                        MapPolygons(polygons, onLineClicked = {})
+                        MapPolygons(polygons, onLineClicked = {
+                            activePolygon = it
+                            viewModel.setBottomSheetContentType(BottomSheetContentType.ViewPolygonDetail)
+                            viewModel.setBottomSheetVisible(true)
+                        })
                     }
                     MapUiOverlay(onLayerButtonClick = {
                         viewModel.setBottomSheetContentType(BottomSheetContentType.SelectMapStyle)
@@ -511,7 +527,6 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 viewModel.undoPolyLineCandidate()
                             },
                             onCancel = {
-                                // TODO - Create polymorphic annotation handler
                                 viewModel.clearPolyCandidate()
                                 viewModel.setLongTapActionType(LongTapAction.ShowAnnotationMenu)
                             },
@@ -558,8 +573,8 @@ fun MapPolylines(polylines: List<Polyline>, onLineClicked: (Polyline) -> Unit) {
 @OptIn(MapboxExperimental::class)
 @Composable
 fun MapPolygons(
-    polygons: List<com.quasar.app.map.models.Polygon>,
-    onLineClicked: (com.quasar.app.map.models.Polygon) -> Unit
+    polygons: List<Polygon>,
+    onLineClicked: (Polygon) -> Unit
 ) {
 
     val allPoints = mutableListOf<Point>()
@@ -576,11 +591,16 @@ fun MapPolygons(
             .withFillColor(Color.Cyan.toArgb()).withFillOpacity(0.5)
     }
 
-    PolygonAnnotationGroup(annotations = polys)
+    PolygonAnnotationGroup(annotations = polys, onClick = {
+        val poly = polygons.first { poly -> poly.points() == it.points.first() }
+        onLineClicked(poly)
+
+        true
+    })
 
     CircleAnnotationGroup(annotations = points, onClick = {
-        val line = polygons.first { line -> line.points().contains(it.point) }
-        onLineClicked(line)
+        val poly = polygons.first { poly -> poly.points().contains(it.point) }
+        onLineClicked(poly)
 
         true
     })
@@ -619,12 +639,12 @@ fun MapPolygon(points: List<Point>, color: Color = Color.Magenta) {
 }
 
 fun getArea(points: List<Point>): String {
-    val polygon = Polygon.fromLngLats(listOf(points))
+    val polygon = GeoJsonPolygon.fromLngLats(listOf(points))
     val area = TurfMeasurement.area(polygon)
 
 
-    if (area > 1000) {
-        val km = Utils.RoundNumberToDp(area / 1000, 1)
+    if (area > 10_000) {
+        val km = Utils.RoundNumberToDp(area / 1_000_000, 1)
 
         return "$km sq KM"
     }
