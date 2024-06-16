@@ -79,14 +79,14 @@ class MapViewModel(
         }
     }
 
-    fun addPointToPolylineCandidate(point: Point) {
+    fun addPointToPolyCandidate(point: Point) {
         _uiState.update { currentState ->
             val newList = mutableListOf<Point>()
-            newList.addAll(currentState.polylineCandidate)
+            newList.addAll(currentState.polyCandidate)
             newList.add(point)
 
             currentState.copy(
-                polylineCandidate = newList
+                polyCandidate = newList
             )
         }
     }
@@ -94,7 +94,7 @@ class MapViewModel(
     fun undoPolyLineCandidate() {
         _uiState.update { cur ->
             cur.copy(
-                polylineCandidate = cur.polylineCandidate.dropLast(1)
+                polyCandidate = cur.polyCandidate.dropLast(1)
             )
         }
     }
@@ -102,7 +102,7 @@ class MapViewModel(
     fun clearPolylineCandidate() {
         _uiState.update { currentState ->
             currentState.copy(
-                polylineCandidate = listOf()
+                polyCandidate = listOf()
             )
         }
     }

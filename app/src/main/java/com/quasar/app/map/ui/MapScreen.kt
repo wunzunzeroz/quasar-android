@@ -66,6 +66,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.mapbox.common.location.LocationError
 import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
+import com.mapbox.geojson.Polygon
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.Style
 import com.mapbox.maps.dsl.cameraOptions
@@ -75,6 +76,7 @@ import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGroup
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
+import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotationGroup
 import com.mapbox.maps.extension.compose.style.MapStyle
@@ -224,12 +226,16 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             BottomSheetContentType.AddAnnotation -> AddAnnotationSheet(onAddPolyline = {
                                 viewModel.setLongTapActionType(LongTapAction.AddPointToPolyline)
                                 viewModel.setBottomSheetVisible(false)
-                                viewModel.addPointToPolylineCandidate(longTappedLocation)
-                            }, onAddPolygon = { /*TODO*/ }, onAddCircle = { /*TODO*/ })
+                                viewModel.addPointToPolyCandidate(longTappedLocation)
+                            }, onAddPolygon = {
+                                viewModel.setLongTapActionType(LongTapAction.AddPointToPolygon)
+                                viewModel.setBottomSheetVisible(false)
+                                viewModel.addPointToPolyCandidate(longTappedLocation)
+                            }, onAddCircle = { /*TODO*/ })
 
                             BottomSheetContentType.AddCircleAnnotation -> TODO()
                             BottomSheetContentType.AddPolylineAnnotation -> SavePolylineSheet(
-                                points = uiState.polylineCandidate,
+                                points = uiState.polyCandidate,
                                 onSave = { polyline ->
                                     coroutineScope.launch {
                                         viewModel.savePolyline(polyline)
@@ -322,12 +328,14 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     viewModel.setBottomSheetVisible(true)
                                 }
 
-                                LongTapAction.AddPointToPolyline -> viewModel.addPointToPolylineCandidate(
+                                LongTapAction.AddPointToPolyline -> viewModel.addPointToPolyCandidate(
                                     it
                                 )
 
                                 LongTapAction.CreateCircleAtPoint -> TODO()
-                                LongTapAction.AddPointToPolygon -> TODO()
+                                LongTapAction.AddPointToPolygon -> viewModel.addPointToPolyCandidate(
+                                    it
+                                )
                             }
 
                             true
@@ -439,7 +447,13 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         }
 
                         // Candidate:
-                        MapPolyline(uiState.polylineCandidate)
+                        if (uiState.longTapAction == LongTapAction.AddPointToPolyline) {
+                            MapPolyline(uiState.polyCandidate)
+                        }
+                        if (uiState.longTapAction == LongTapAction.AddPointToPolygon) {
+                            MapPolygon(uiState.polyCandidate)
+                        }
+
                         // From Repo:
                         MapPolylines(polylines, onLineClicked = {
                             activePolyline = it
@@ -463,11 +477,11 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                     }, modifier = Modifier.padding(contentPadding)
                     )
 
-                    // TODO - Wrap in polymorphic handler
-                    if (uiState.polylineCandidate.isNotEmpty()) {
-
+                    if (uiState.polyCandidate.isNotEmpty()) {
                         AnnotationConfirmation(
-                            data = getDistance(uiState.polylineCandidate),
+                            data = if (uiState.longTapAction == LongTapAction.AddPointToPolyline) getDistance(
+                                uiState.polyCandidate
+                            ) else getArea(uiState.polyCandidate),
                             onConfirm = {
                                 viewModel.setBottomSheetContentType(BottomSheetContentType.AddPolylineAnnotation)
                                 viewModel.setBottomSheetVisible(true)
@@ -526,13 +540,46 @@ fun MapPolyline(polyline: List<Point>, color: Color = Color.Magenta) {
     Log.d("MapScreen", "Point count: ${polyline.count()}")
 
     val polylinePoints = polyline.map {
-        CircleAnnotationOptions().withPoint(it).withCircleRadius(6.0)
+        CircleAnnotationOptions().withPoint(it).withCircleRadius(4.0)
             .withCircleColor(color.toArgb())
+            .withCircleOpacity(0.7)
     }
     PolylineAnnotation(
-        polyline, lineWidth = 3.0, lineColorInt = color.toArgb()
+        polyline, lineWidth = 3.0, lineColorInt = color.toArgb(), lineOpacity = 0.5
     )
     CircleAnnotationGroup(annotations = polylinePoints)
+}
+
+@OptIn(MapboxExperimental::class)
+@Composable
+fun MapPolygon(points: List<Point>, color: Color = Color.Magenta) {
+    Log.d("MapScreen", "Point count: ${points.count()}")
+
+    val polylinePoints = points.map {
+        CircleAnnotationOptions().withPoint(it).withCircleRadius(4.0)
+            .withCircleColor(color.toArgb())
+            .withCircleOpacity(0.7)
+    }
+    PolygonAnnotation(
+        points = listOf(points), fillColorInt = color.toArgb(), fillOpacity = 0.5
+    )
+    CircleAnnotationGroup(annotations = polylinePoints)
+}
+
+fun getArea(points: List<Point>): String {
+    val polygon = Polygon.fromLngLats(listOf(points))
+    val area = TurfMeasurement.area(polygon)
+
+
+    if (area > 1000) {
+        val km = Utils.RoundNumberToDp(area / 1000, 1)
+
+        return "$km sq KM"
+    }
+
+    val m = Utils.RoundNumberToDp(area, 1)
+
+    return "$m sq M"
 }
 
 fun getDistance(polyline: List<Point>): String {

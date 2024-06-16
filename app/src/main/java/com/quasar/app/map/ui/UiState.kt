@@ -16,7 +16,7 @@ data class UiState(
 
     val mapStyle: MapStyle = MapStyle.Outdoors,
 
-    val polylineCandidate: List<Point> = listOf(),
+    val polyCandidate: List<Point> = listOf(),
 
     val waypoints: List<Waypoint> = listOf(),
     val circles: List<Circle> = listOf(),
