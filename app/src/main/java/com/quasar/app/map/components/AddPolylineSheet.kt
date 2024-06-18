@@ -27,7 +27,7 @@ import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Position
 
 @Composable
-fun SavePolylineSheet(
+fun AddPolylineSheet(
     points: List<Point>,
     onSave: (Polyline) -> Unit,
     modifier: Modifier = Modifier
@@ -70,5 +70,5 @@ fun SavePolylineSheet(
 @Preview(showSystemUi = true)
 @Composable
 fun SavePolylineSheetPreview() {
-    SavePolylineSheet(listOf(),{})
+    AddPolylineSheet(listOf(),{})
 }

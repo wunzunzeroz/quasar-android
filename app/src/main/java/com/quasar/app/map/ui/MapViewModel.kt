@@ -8,6 +8,7 @@ import com.quasar.app.map.data.PolygonsRepository
 import com.quasar.app.map.data.PolylinesRepository
 import com.quasar.app.map.data.SketchRepository
 import com.quasar.app.map.data.WaypointsRepository
+import com.quasar.app.map.models.Circle
 import com.quasar.app.map.models.CreateWaypointInput
 import com.quasar.app.map.models.Polygon
 import com.quasar.app.map.models.Polyline
@@ -50,6 +51,13 @@ class MapViewModel(
 
     val polygons: StateFlow<List<Polygon>> =
         polygonsRepository.getAll().map { it }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = listOf()
+        )
+
+    val circles: StateFlow<List<Circle>> =
+        circlesRepository.getAll().map { it }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = listOf()
@@ -153,5 +161,17 @@ class MapViewModel(
 
     suspend fun deletePolygon(polygon: Polygon) {
         polygonsRepository.delete(polygon)
+    }
+
+    suspend fun saveCircle(circle: Circle) {
+        circlesRepository.insert(circle)
+    }
+
+    suspend fun updateCircle(circle: Circle) {
+        circlesRepository.update(circle)
+    }
+
+    suspend fun deleteCircle(circle: Circle) {
+        circlesRepository.delete(circle)
     }
 }
