@@ -131,6 +131,7 @@ import com.quasar.app.map.utils.Utils
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
+import com.quasar.app.map.styles.MapStyle
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -527,7 +528,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             viewModel.setBottomSheetContentType(BottomSheetContentType.ViewPolygonDetail)
                             viewModel.setBottomSheetVisible(true)
                         })
-                        MapCircles(circles, onCircleClicked = {
+                        MapCircles(circles, uiState.mapStyle, onCircleClicked = {
                             activeCircle = it
                             viewModel.setBottomSheetContentType(BottomSheetContentType.ViewCircleDetail)
                             viewModel.setBottomSheetVisible(true)
@@ -608,9 +609,9 @@ fun MapPolylines(polylines: List<Polyline>, onLineClicked: (Polyline) -> Unit) {
 @OptIn(MapboxExperimental::class)
 @Composable
 fun MapCircles(
-    circles: List<Circle>, onCircleClicked: (Circle) -> Unit
+    circles: List<Circle>, mapStyle: MapStyle, onCircleClicked: (Circle) -> Unit
 ) {
-    MapEffect(circles) {
+    MapEffect(circles, mapStyle) {
         Log.d("MapScreen", "Circles list changed")
         it.mapboxMap.getStyle { style ->
             val circleLayers =
