@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DirectionsBoat
 import androidx.compose.material.icons.filled.Flight
@@ -25,6 +26,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Divider
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -53,6 +55,8 @@ import com.quasar.app.R
 import com.quasar.app.map.models.CreateWaypointInput
 import com.quasar.app.map.models.Position
 import com.quasar.app.map.styles.MapStyle
+import com.quasar.app.map.ui.CoordinateType
+import com.quasar.app.map.utils.Utils
 
 @Composable
 fun LocationDetailSheet(
@@ -62,6 +66,9 @@ fun LocationDetailSheet(
     modifier: Modifier = Modifier
 ) {
     val ctx = LocalContext.current
+    var coordinateType by remember { mutableStateOf(CoordinateType.LatLngDec) } // TODO - Persist as user pref?
+    val position = Position.fromPoint(location)
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         modifier = modifier.padding(horizontal = 8.dp)
@@ -69,33 +76,26 @@ fun LocationDetailSheet(
         Text("Tapped Location", style = MaterialTheme.typography.headlineSmall)
         Spacer(modifier = Modifier.height(8.dp))
         Divider()
-        Spacer(modifier = Modifier.height(32.dp))
-        Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
-            Column {
-                Text(
-                    String.format("%.6f", location.latitude()),
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Text("Latitude", style = MaterialTheme.typography.labelLarge)
-            }
-            Column {
-                Text(
-                    String.format("%.6f", location.longitude()),
-                    style = MaterialTheme.typography.titleLarge
-                )
-                Text("Longitude", style = MaterialTheme.typography.labelLarge)
-            }
+        Spacer(modifier = Modifier.height(4.dp))
+        CoordinateTypeSelector(value = coordinateType, onSelect = { coordinateType = it })
+        Spacer(modifier = Modifier.height(16.dp))
+
+        when (coordinateType) {
+            CoordinateType.LatLngDec -> LatLngDecimalLocation(position = position)
+            CoordinateType.LatLngDms -> LatLngDmsLocation(position = position)
+            CoordinateType.GridRef -> GridRefLocation(position = position)
         }
+
         Spacer(Modifier.height(8.dp))
         Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
-            Column {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     String.format("%.1f km", calculateDistance(userLocation, location)),
                     style = MaterialTheme.typography.titleLarge
                 )
                 Text("Distance", style = MaterialTheme.typography.labelLarge)
             }
-            Column {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
                     String.format("%.0f °T", calculateBearing(userLocation, location)),
                     style = MaterialTheme.typography.titleLarge
@@ -141,12 +141,97 @@ private fun shareLocation(context: Context, location: Point) {
 
 }
 
+@Composable
+fun LatLngDecimalLocation(position: Position) {
+    Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                String.format("%.6f", position.latLngDecimal.latitude),
+                style = MaterialTheme.typography.titleLarge
+            )
+            Text("Latitude", style = MaterialTheme.typography.labelLarge)
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(
+                String.format("%.6f", position.latLngDecimal.longitude),
+                style = MaterialTheme.typography.titleLarge
+            )
+            Text("Longitude", style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+@Composable
+fun LatLngDmsLocation(position: Position) {
+    Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row() {
+                Text(
+                    "${position.latLngDegreesMinutes.latitude.degrees}°",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "${position.latLngDegreesMinutes.latitude.minutes}'",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "${position.latLngDegreesMinutes.latitude.cardinalDirection}",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+            Text("Latitude", style = MaterialTheme.typography.labelLarge)
+        }
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row() {
+                Text(
+                    "${position.latLngDegreesMinutes.longitude.degrees}°",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "${position.latLngDegreesMinutes.longitude.minutes}'",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    "${position.latLngDegreesMinutes.longitude.cardinalDirection}",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+            Text("Longitude", style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+@Composable
+fun GridRefLocation(position: Position) {
+    Row(horizontalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxWidth()) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    "${position.gridReference.eastings} E",
+                    style = MaterialTheme.typography.titleLarge
+                )
+                Spacer(modifier = Modifier.width(32.dp))
+                Text(
+                    "${position.gridReference.northings} N",
+                    style = MaterialTheme.typography.titleLarge
+                )
+            }
+            Text("Grid Reference (NZTM)", style = MaterialTheme.typography.labelLarge)
+        }
+    }
+}
+
+
 @Preview(showSystemUi = true)
 @Composable
 fun LocationDetailSheetPreview() {
     LocationDetailSheet(
         userLocation = Point.fromLngLat(68.987654, 44.987654),
-        location = Point.fromLngLat(69.123456789, 42.123456789),
+        location = Point.fromLngLat(174.8480085, -36.832527),
         onCreateWaypoint = {}
     )
 }

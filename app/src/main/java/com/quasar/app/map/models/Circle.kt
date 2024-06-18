@@ -5,11 +5,9 @@ import androidx.room.PrimaryKey
 import com.mapbox.geojson.Feature
 import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Polygon
-import com.mapbox.maps.extension.compose.style.sources.generated.GeoJSONData
 import com.mapbox.turf.TurfConstants
-import com.mapbox.turf.TurfMeasurement
 import com.mapbox.turf.TurfTransformation
-import com.quasar.app.map.components.DistanceUnit
+import com.quasar.app.map.ui.DistanceUnit
 
 @Entity
 class Circle(
