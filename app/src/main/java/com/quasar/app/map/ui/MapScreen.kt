@@ -94,6 +94,7 @@ import com.mapbox.maps.extension.style.layers.addLayer
 import com.mapbox.maps.extension.style.layers.generated.fillLayer
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.geoJsonSource
+import com.mapbox.maps.extension.style.sources.getSourceAs
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
@@ -219,14 +220,14 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 })
 
                             BottomSheetContentType.GoToLocation -> TODO()
-                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(
-                                userLocation,
+                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(userLocation,
                                 tappedLocation.value,
                                 {
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
                                 })
 
-                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(tappedLocation.value,
+                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(
+                                tappedLocation.value,
                                 onCreateWaypoint = {
                                     coroutineScope.launch {
                                         viewModel.saveWaypoint(it)
@@ -261,8 +262,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 viewModel.setBottomSheetContentType(BottomSheetContentType.AddCircleAnnotation)
                             })
 
-                            BottomSheetContentType.AddCircleAnnotation -> AddCircleSheet(
-                                longTappedLocation,
+                            BottomSheetContentType.AddCircleAnnotation -> AddCircleSheet(longTappedLocation,
                                 onSave = { circle ->
                                     coroutineScope.launch {
                                         viewModel.saveCircle(circle)
@@ -272,8 +272,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     }
                                 })
 
-                            BottomSheetContentType.AddPolylineAnnotation -> AddPolylineSheet(
-                                points = uiState.polyCandidate,
+                            BottomSheetContentType.AddPolylineAnnotation -> AddPolylineSheet(points = uiState.polyCandidate,
                                 onSave = { polyline ->
                                     coroutineScope.launch {
                                         viewModel.savePolyline(polyline)
@@ -283,8 +282,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     }
                                 })
 
-                            BottomSheetContentType.AddPolygonAnnotation -> AddPolygonSheet(
-                                points = uiState.polyCandidate,
+                            BottomSheetContentType.AddPolygonAnnotation -> AddPolygonSheet(points = uiState.polyCandidate,
                                 onSave = { polygon ->
                                     coroutineScope.launch {
                                         viewModel.savePolygon(polygon)
@@ -613,21 +611,22 @@ fun MapCircles(
     circles: List<Circle>, onCircleClicked: (Circle) -> Unit
 ) {
     MapEffect(circles) {
+        Log.d("MapScreen", "Circles list changed")
         it.mapboxMap.getStyle { style ->
+            val circleLayers =
+                style.styleLayers.filter { layer -> layer.id.startsWith("circle-layer-") }
+            val circleSources =
+                style.styleSources.filter { layer -> layer.id.startsWith("circle-source-") }
+
+            // TODO - Only draw new and delete old, rather than redrawing every time
+            circleLayers.forEach { l -> style.removeStyleLayer(l.id) }
+            circleSources.forEach { s -> style.removeStyleSource(s.id) }
+
             circles.forEach { circle ->
                 Log.d("MapScreen", "Adding circle overlay with ID: ${circle.id}")
 
                 val sourceId = "circle-source-${circle.id}"
                 val layerId = "circle-layer-${circle.id}"
-
-                if (style.styleLayerExists(layerId)) {
-                    Log.d("MapScreen", "Removing layer for ID: $layerId")
-                    style.removeStyleLayer(layerId)
-                }
-                if (style.styleSourceExists(sourceId)) {
-                    Log.d("MapScreen", "Removing source for ID: $sourceId")
-                    style.removeStyleSource(sourceId)
-                }
 
                 val geoJsonCircle = circle.toGeoJsonString()
 
