@@ -64,6 +64,8 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.mapbox.common.location.LocationError
+import com.mapbox.geojson.Feature
+import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
 import com.mapbox.geojson.Polygon as GeoJsonPolygon
@@ -81,6 +83,17 @@ import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotationG
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotationGroup
 import com.mapbox.maps.extension.compose.style.MapStyle
+import com.mapbox.maps.extension.compose.style.layers.generated.CircleColor
+import com.mapbox.maps.extension.compose.style.layers.generated.CircleLayer
+import com.mapbox.maps.extension.compose.style.layers.generated.CircleRadius
+import com.mapbox.maps.extension.compose.style.layers.generated.Transition
+import com.mapbox.maps.extension.compose.style.sources.generated.GeoJSONData
+import com.mapbox.maps.extension.compose.style.sources.generated.GeoJsonSourceState
+import com.mapbox.maps.extension.compose.style.sources.generated.rememberGeoJsonSourceState
+import com.mapbox.maps.extension.style.layers.addLayer
+import com.mapbox.maps.extension.style.layers.generated.fillLayer
+import com.mapbox.maps.extension.style.sources.addSource
+import com.mapbox.maps.extension.style.sources.generated.geoJsonSource
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
@@ -599,9 +612,40 @@ fun MapPolylines(polylines: List<Polyline>, onLineClicked: (Polyline) -> Unit) {
 fun MapCircles(
     circles: List<Circle>, onCircleClicked: (Circle) -> Unit
 ) {
+    MapEffect(circles) {
+        it.mapboxMap.getStyle { style ->
+            circles.forEach { circle ->
+                Log.d("MapScreen", "Adding circle overlay with ID: ${circle.id}")
+
+                val sourceId = "circle-source-${circle.id}"
+                val layerId = "circle-layer-${circle.id}"
+
+                if (style.styleLayerExists(layerId)) {
+                    Log.d("MapScreen", "Removing layer for ID: $layerId")
+                    style.removeStyleLayer(layerId)
+                }
+                if (style.styleSourceExists(sourceId)) {
+                    Log.d("MapScreen", "Removing source for ID: $sourceId")
+                    style.removeStyleSource(sourceId)
+                }
+
+                val geoJsonCircle = circle.toGeoJsonString()
+
+                style.addSource(geoJsonSource(sourceId) {
+                    data(geoJsonCircle)
+                })
+                style.addLayer(fillLayer(layerId, sourceId) {
+                    fillColor(Color.Cyan.toArgb())
+                    fillOpacity(0.4)
+                })
+            }
+        }
+
+    }
+
     val points = circles.map {
         CircleAnnotationOptions().withPoint(it.center.toPoint()).withCircleRadius(6.0)
-            .withCircleColor(Color.Cyan.toArgb()).withCircleOpacity(1.0)
+            .withCircleColor(Color.Blue.toArgb()).withCircleOpacity(0.7)
             .withDraggable(false) // TODO - Support draggables
     }
 
