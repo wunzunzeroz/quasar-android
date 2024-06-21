@@ -5,27 +5,14 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
 import android.util.Log
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Cancel
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.Layers
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.MyLocation
-import androidx.compose.material.icons.filled.Navigation
-import androidx.compose.material.icons.filled.RotateLeft
-import androidx.compose.material.icons.filled.Undo
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -74,23 +61,9 @@ import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotation
-import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGroup
-import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
-import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotation
-import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotationGroup
-import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
-import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotationGroup
 import com.mapbox.maps.extension.compose.style.MapStyle
-import com.mapbox.maps.extension.style.layers.addLayer
-import com.mapbox.maps.extension.style.layers.generated.fillLayer
-import com.mapbox.maps.extension.style.sources.addSource
-import com.mapbox.maps.extension.style.sources.generated.geoJsonSource
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
-import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
-import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
-import com.mapbox.maps.plugin.annotation.generated.PolygonAnnotationOptions
-import com.mapbox.maps.plugin.annotation.generated.PolylineAnnotationOptions
 import com.mapbox.maps.plugin.gestures.generated.GesturesSettings
 import com.mapbox.maps.plugin.locationcomponent.LocationConsumer
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
@@ -104,7 +77,6 @@ import com.quasar.app.map.components.AddPolygonSheet
 import com.quasar.app.map.components.AddWaypointSheet
 import com.quasar.app.map.components.BottomBar
 import com.quasar.app.map.components.LocationDetailSheet
-import com.quasar.app.map.components.MapActionButton
 import com.quasar.app.map.components.PermissionRequest
 import com.quasar.app.map.components.AddPolylineSheet
 import com.quasar.app.map.components.SelectMapStyleSheet
@@ -121,7 +93,6 @@ import com.quasar.app.map.utils.Utils
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
-import com.quasar.app.map.styles.MapStyle
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -184,6 +155,17 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 val tappedLocation = remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
                 var longTappedLocation by remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
                 val userLocation by viewModel.userLocation.collectAsState()
+
+                val mapViewportState = remember {
+                    MapViewportState().apply {
+                        setCameraOptions {
+                            zoom(11.0)
+                            center(Point.fromLngLat(174.831123, -36.833331))
+                            pitch(0.0)
+                            bearing(0.0)
+                        }
+                    }
+                }
 
                 var activeWaypoint: Waypoint? by remember { mutableStateOf(null) }
                 var activePolyline: Polyline? by remember { mutableStateOf(null) }
@@ -323,16 +305,6 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 // Map Container
                 Box(modifier = Modifier.fillMaxSize()) {
                     val hapticFeedback = LocalHapticFeedback.current
-                    val mapViewportState = remember {
-                        MapViewportState().apply {
-                            setCameraOptions {
-                                zoom(11.0)
-                                center(Point.fromLngLat(174.831123, -36.833331))
-                                pitch(0.0)
-                                bearing(0.0)
-                            }
-                        }
-                    }
 
                     var mapRotationEnabled = remember {
                         mutableStateOf(false)
@@ -484,7 +456,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             activeWaypoint = it
                             viewModel.setBottomSheetContentType(BottomSheetContentType.ViewWaypointDetail)
                             viewModel.setBottomSheetVisible(true)
-                        }, ctx)
+                        })
 
 
                         // Candidate:
@@ -526,6 +498,10 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         mapGesturesSettings.value = mapGesturesSettings.value.toBuilder()
                             .setRotateEnabled(mapRotationEnabled.value).build()
                         Log.d(logTag, "Map rotation enabled: $mapRotationEnabled")
+                    }, onGotoButtonClick = {
+                        viewModel.setBottomSheetContentType(BottomSheetContentType.GoToLocation)
+                        viewModel.setBottomSheetVisible(true)
+
                     }, modifier = Modifier.padding(contentPadding)
                     )
 
@@ -552,183 +528,6 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
         }
 
     }
-}
-
-@OptIn(MapboxExperimental::class)
-@Composable
-fun MapWaypoints(
-    waypoints: List<Waypoint>, onWaypointClicked: (Waypoint) -> Unit, context: Context
-) {
-    val waypointAnnotations = waypoints.map {
-        PointAnnotationOptions().withPoint(it.position.toPoint())
-            .withIconImage(getMarkerBitmap(context, it.markerType))
-    }
-
-    val circleAnnotations = waypoints.map {
-        CircleAnnotationOptions().withPoint(it.position.toPoint())
-            .withCircleColor(it.color).withCircleRadius(10.0).withCircleOpacity(0.7)
-    }
-
-    CircleAnnotationGroup(annotations = circleAnnotations, onClick = {
-        val wpt = waypoints.first { w -> w.position.toPoint() == it.point }
-
-        onWaypointClicked(wpt)
-
-        true
-    })
-
-    PointAnnotationGroup(annotations = waypointAnnotations, onClick = {
-        val wpt = waypoints.first { w -> w.position.toPoint() == it.point }
-
-        onWaypointClicked(wpt)
-
-        true
-    })
-}
-
-@OptIn(MapboxExperimental::class)
-@Composable
-fun MapPolylines(polylines: List<Polyline>, onLineClicked: (Polyline) -> Unit) {
-    val lines = polylines.map {
-        PolylineAnnotationOptions().withPoints(it.points()).withLineColor(it.color)
-            .withLineWidth(3.0)
-    }
-
-    val pts = polylines.map {
-        it.points().map { pt ->
-            CircleAnnotationOptions().withPoint(pt).withCircleRadius(6.0)
-                .withCircleColor(it.color).withDraggable(false) // TODO - Support draggables
-        }
-    }.flatten()
-
-    PolylineAnnotationGroup(annotations = lines, onClick = {
-        val line = polylines.first { line -> line.points() == it.points }
-        onLineClicked(line)
-
-        true
-    })
-    CircleAnnotationGroup(annotations = pts, onClick = {
-        val line = polylines.first { line -> line.points().contains(it.point) }
-        onLineClicked(line)
-
-        true
-    })
-}
-
-@OptIn(MapboxExperimental::class)
-@Composable
-fun MapCircles(
-    circles: List<Circle>, mapStyle: MapStyle, onCircleClicked: (Circle) -> Unit
-) {
-    MapEffect(circles, mapStyle) {
-        Log.d("MapScreen", "Circles list changed")
-        it.mapboxMap.getStyle { style ->
-            val circleLayers =
-                style.styleLayers.filter { layer -> layer.id.startsWith("circle-layer-") }
-            val circleSources =
-                style.styleSources.filter { layer -> layer.id.startsWith("circle-source-") }
-
-            // TODO - Only draw new and delete old, rather than redrawing every time
-            circleLayers.forEach { l -> style.removeStyleLayer(l.id) }
-            circleSources.forEach { s -> style.removeStyleSource(s.id) }
-
-            circles.forEach { circle ->
-                Log.d("MapScreen", "Adding circle overlay with ID: ${circle.id}")
-
-                val sourceId = "circle-source-${circle.id}"
-                val layerId = "circle-layer-${circle.id}"
-
-                val geoJsonCircle = circle.toGeoJsonString()
-
-                style.addSource(geoJsonSource(sourceId) {
-                    data(geoJsonCircle)
-                })
-                style.addLayer(fillLayer(layerId, sourceId) {
-                    fillColor(circle.color)
-                    fillOpacity(0.4)
-                })
-            }
-        }
-
-    }
-
-    val points = circles.map {
-        CircleAnnotationOptions().withPoint(it.center.toPoint()).withCircleRadius(6.0)
-            .withCircleColor(it.color).withCircleOpacity(1.0)
-            .withDraggable(false) // TODO - Support draggables
-    }
-
-    CircleAnnotationGroup(annotations = points, onClick = {
-        val circle = circles.first { circle -> circle.center.toPoint() == it.point }
-        onCircleClicked(circle)
-
-        true
-    })
-}
-
-@OptIn(MapboxExperimental::class)
-@Composable
-fun MapPolygons(
-    polygons: List<Polygon>, onLineClicked: (Polygon) -> Unit
-) {
-    val allPoints = mutableListOf<Point>()
-    polygons.forEach { allPoints.addAll(it.points()) }
-
-    val pts = polygons.map {
-        it.points().map { pt ->
-            CircleAnnotationOptions().withPoint(pt).withCircleRadius(4.0).withCircleColor(it.color)
-                .withCircleOpacity(0.7)
-        }
-    }.flatten()
-
-    val polys = polygons.map {
-        PolygonAnnotationOptions().withPoints(listOf(it.points())).withFillColor(it.color)
-            .withFillOpacity(0.5)
-    }
-
-    PolygonAnnotationGroup(annotations = polys, onClick = {
-        val poly = polygons.first { poly -> poly.points() == it.points.first() }
-        onLineClicked(poly)
-
-        true
-    })
-
-    CircleAnnotationGroup(annotations = pts, onClick = {
-        val poly = polygons.first { poly -> poly.points().contains(it.point) }
-        onLineClicked(poly)
-
-        true
-    })
-}
-
-@OptIn(MapboxExperimental::class)
-@Composable
-fun MapPolyline(polyline: List<Point>, color: Color = Color.Magenta) {
-    Log.d("MapScreen", "Point count: ${polyline.count()}")
-
-    val polylinePoints = polyline.map {
-        CircleAnnotationOptions().withPoint(it).withCircleRadius(4.0)
-            .withCircleColor(color.toArgb()).withCircleOpacity(0.7)
-    }
-    PolylineAnnotation(
-        polyline, lineWidth = 3.0, lineColorInt = color.toArgb(), lineOpacity = 0.5
-    )
-    CircleAnnotationGroup(annotations = polylinePoints)
-}
-
-@OptIn(MapboxExperimental::class)
-@Composable
-fun MapPolygon(points: List<Point>, color: Color = Color.Magenta) {
-    Log.d("MapScreen", "Point count: ${points.count()}")
-
-    val polylinePoints = points.map {
-        CircleAnnotationOptions().withPoint(it).withCircleRadius(4.0)
-            .withCircleColor(color.toArgb()).withCircleOpacity(0.7)
-    }
-    PolygonAnnotation(
-        points = listOf(points), fillColorInt = color.toArgb(), fillOpacity = 0.5
-    )
-    CircleAnnotationGroup(annotations = polylinePoints)
 }
 
 fun getArea(points: List<Point>): String {
@@ -762,118 +561,4 @@ fun getDistance(polyline: List<Point>): String {
     }
 
     return "${km * 1000} M"
-}
-
-@Composable
-fun MapUiOverlay(
-    onLayerButtonClick: () -> Unit,
-    onLocationButtonClick: () -> Unit,
-    mapRotationEnabled: Boolean,
-    onRotateButtonClick: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        modifier = modifier.padding(horizontal = 8.dp)
-    ) {
-        MapActionButton(icon = Icons.Filled.Layers, onClick = onLayerButtonClick)
-        Spacer(modifier = Modifier.height(8.dp))
-        MapActionButton(icon = Icons.Filled.MyLocation, onClick = onLocationButtonClick)
-        Spacer(modifier = Modifier.height(8.dp))
-        MapActionButton(
-            icon = if (mapRotationEnabled) Icons.Filled.Navigation else Icons.Filled.RotateLeft,
-            onClick = onRotateButtonClick
-        )
-    }
-}
-
-@Composable
-fun AnnotationConfirmation(
-    data: String,
-    onConfirm: () -> Unit,
-    onUndo: () -> Unit,
-    onCancel: () -> Unit,
-    modifier: Modifier = Modifier
-) {
-    Column(
-        verticalArrangement = Arrangement.Bottom,
-        horizontalAlignment = Alignment.End,
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 8.dp, vertical = 16.dp)
-    ) {
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Box(
-                modifier = Modifier.background(MaterialTheme.colorScheme.primaryContainer)
-            ) {
-                Text(data, modifier = Modifier.padding(8.dp))
-            }
-            Row {
-                MapActionButton(icon = Icons.Filled.Cancel, onClick = onCancel)
-                Spacer(modifier = Modifier.width(8.dp))
-                MapActionButton(icon = Icons.Filled.Undo, onClick = onUndo)
-                Spacer(modifier = Modifier.width(8.dp))
-                MapActionButton(icon = Icons.Filled.Check, onClick = onConfirm)
-            }
-        }
-    }
-
-}
-
-private fun getMarkerBitmap(context: Context, markerType: WaypointMarkerType): Bitmap {
-    val drawableId = getDrawableForWaypointMarker(markerType)
-    val drawable = ContextCompat.getDrawable(context, drawableId)
-
-    if (drawable is BitmapDrawable) {
-        return resizeBitmap(drawable.bitmap, 30)
-    }
-    throw Exception("Unable to get bitmap for marker type: $markerType")
-}
-
-private fun resizeBitmap(bitmap: Bitmap, size: Int = 40): Bitmap {
-    return Bitmap.createScaledBitmap(bitmap, size, size, false)
-}
-
-fun getDrawableForWaypointMarker(markerType: WaypointMarkerType): Int {
-    return when (markerType) {
-        WaypointMarkerType.Flag -> R.drawable.flag
-        WaypointMarkerType.Marker -> R.drawable.marker
-        WaypointMarkerType.Pin -> R.drawable.marker
-        WaypointMarkerType.Cross -> R.drawable.cross
-        WaypointMarkerType.Circle -> R.drawable.check_mark
-        WaypointMarkerType.Triangle -> R.drawable.triangle
-        WaypointMarkerType.Square -> R.drawable.marker
-        WaypointMarkerType.Star -> R.drawable.star
-        WaypointMarkerType.QuestionMark -> R.drawable.question_mark
-        WaypointMarkerType.ExclamationPoint -> R.drawable.exclamation_mark
-        WaypointMarkerType.CheckMark -> R.drawable.check_mark
-        WaypointMarkerType.CrossMark -> R.drawable.cross_mark
-        WaypointMarkerType.Car -> R.drawable.car
-        WaypointMarkerType.Boat -> R.drawable.boat
-        WaypointMarkerType.Plane -> R.drawable.plane
-        WaypointMarkerType.Helicopter -> R.drawable.helicopter
-        WaypointMarkerType.Forest -> R.drawable.forest
-        WaypointMarkerType.Water -> R.drawable.water
-        WaypointMarkerType.Mountain -> R.drawable.mountains
-        WaypointMarkerType.Beach -> R.drawable.beach
-        WaypointMarkerType.Fire -> R.drawable.fire
-        WaypointMarkerType.Anchor -> R.drawable.anchor
-        WaypointMarkerType.Lifering -> R.drawable.lifering
-        WaypointMarkerType.Target -> R.drawable.target
-        WaypointMarkerType.Tent -> R.drawable.tent
-        WaypointMarkerType.House -> R.drawable.house
-        WaypointMarkerType.Building -> R.drawable.building
-        WaypointMarkerType.Castle -> R.drawable.castle
-        WaypointMarkerType.Footprints -> R.drawable.footsteps
-        WaypointMarkerType.Person -> R.drawable.person
-        WaypointMarkerType.People -> R.drawable.people
-        WaypointMarkerType.Skull -> R.drawable.skull
-        WaypointMarkerType.Drinks -> R.drawable.drinks
-        WaypointMarkerType.Food -> R.drawable.food
-        WaypointMarkerType.WaterSource -> R.drawable.water_source
-        WaypointMarkerType.Fuel -> R.drawable.fuel
-    }
 }
