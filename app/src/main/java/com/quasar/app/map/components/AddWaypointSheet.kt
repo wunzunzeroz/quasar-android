@@ -1,6 +1,7 @@
 package com.quasar.app.map.components
 
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -27,24 +28,21 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.core.graphics.toColorLong
 import com.mapbox.geojson.Point
-import com.quasar.app.R
-import com.quasar.app.map.models.CreateWaypointInput
 import com.quasar.app.map.models.Position
+import com.quasar.app.map.models.Waypoint
 import com.quasar.app.map.models.WaypointMarkerType
 import com.quasar.app.map.ui.getDrawableForWaypointMarker
 import com.quasar.app.map.utils.Utils
 
 @Composable
 fun AddWaypointSheet(
-    location: Point, onCreateWaypoint: (CreateWaypointInput) -> Unit, modifier: Modifier = Modifier
+    location: Point, onCreateWaypoint: (Waypoint) -> Unit, modifier: Modifier = Modifier
 ) {
     var latitude by remember { mutableDoubleStateOf(location.latitude()) }
     var longitude by remember { mutableDoubleStateOf(location.longitude()) }
@@ -62,13 +60,11 @@ fun AddWaypointSheet(
         Divider()
         Spacer(modifier = Modifier.height(12.dp))
 
-        Row {
+        Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
 
             WaypointIconDropdown(onValueChange = { markerType = it })
-//            Spacer(modifier = Modifier.width(8.dp))
-//
-            // TODO - Handle color selection
-//            ColorSelectDropdown(onValueChange = { markerColor = it })
+            Spacer(modifier = Modifier.width(16.dp))
+            ColorSelectDropdown(initialValue = markerColor, onValueChange = { markerColor = it })
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -121,17 +117,17 @@ fun AddWaypointSheet(
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(onClick = {
-            val input = CreateWaypointInput(
-                Position(latitude, longitude),
-                name,
-                code,
-                markerType,
-                markerColor.toArgb().toColorLong()
+            val waypoint = Waypoint(
+                position = Position(latitude, longitude),
+                name = name,
+                code = code,
+                markerType = markerType,
+                color = Utils.convertColorToHexString(markerColor)
             )
 
             Log.d("AddWaypointSheet", "Creating waypoint '$name' at $latitude, $longitude")
 
-            onCreateWaypoint(input)
+            onCreateWaypoint(waypoint)
         }, modifier = Modifier.fillMaxWidth()) {
             Text("Create Waypoint")
         }
@@ -174,41 +170,6 @@ fun WaypointIconDropdown(onValueChange: (WaypointMarkerType) -> Unit) {
                         Text(text = type.name)
                     }
                 })
-            }
-        }
-    }
-}
-
-@Composable
-fun ColorSelectDropdown(onValueChange: (Color) -> Unit) {
-    var expanded by remember { mutableStateOf(false) }
-    var selected by remember { mutableStateOf(Pair("Magenta", Color.Magenta)) }
-
-
-    val colors = listOf(
-        Pair("Blue", Color.Blue),
-        Pair("Green", Color.Green),
-        Pair("Magenta", Color.Magenta),
-        Pair("Yellow", Color.Yellow),
-    )
-
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        OutlinedButton(
-            onClick = { expanded = true },
-        ) {
-            Text("Marker Color: ${selected.first}")
-        }
-        DropdownMenu(
-            expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.width(300.dp)
-        ) {
-            colors.forEach { color ->
-                DropdownMenuItem(onClick = {
-                    onValueChange(color.second)
-                    selected = color
-                    expanded = false
-                }, text = { Text(color.first) })
             }
         }
     }

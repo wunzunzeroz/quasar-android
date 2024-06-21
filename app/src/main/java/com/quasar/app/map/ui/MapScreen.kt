@@ -64,8 +64,6 @@ import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
 import com.mapbox.common.location.LocationError
-import com.mapbox.geojson.Feature
-import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.LineString
 import com.mapbox.geojson.Point
 import com.mapbox.geojson.Polygon as GeoJsonPolygon
@@ -83,18 +81,10 @@ import com.mapbox.maps.extension.compose.annotation.generated.PolygonAnnotationG
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotationGroup
 import com.mapbox.maps.extension.compose.style.MapStyle
-import com.mapbox.maps.extension.compose.style.layers.generated.CircleColor
-import com.mapbox.maps.extension.compose.style.layers.generated.CircleLayer
-import com.mapbox.maps.extension.compose.style.layers.generated.CircleRadius
-import com.mapbox.maps.extension.compose.style.layers.generated.Transition
-import com.mapbox.maps.extension.compose.style.sources.generated.GeoJSONData
-import com.mapbox.maps.extension.compose.style.sources.generated.GeoJsonSourceState
-import com.mapbox.maps.extension.compose.style.sources.generated.rememberGeoJsonSourceState
 import com.mapbox.maps.extension.style.layers.addLayer
 import com.mapbox.maps.extension.style.layers.generated.fillLayer
 import com.mapbox.maps.extension.style.sources.addSource
 import com.mapbox.maps.extension.style.sources.generated.geoJsonSource
-import com.mapbox.maps.extension.style.sources.getSourceAs
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
@@ -221,7 +211,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 })
 
                             BottomSheetContentType.GoToLocation -> TODO()
-                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(userLocation,
+                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(
+                                userLocation,
                                 tappedLocation.value,
                                 {
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
@@ -233,6 +224,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     coroutineScope.launch {
                                         viewModel.saveWaypoint(it)
                                         viewModel.setBottomSheetVisible(false)
+                                        tappedLocation.value = null
                                     }
                                 })
 
@@ -263,7 +255,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 viewModel.setBottomSheetContentType(BottomSheetContentType.AddCircleAnnotation)
                             })
 
-                            BottomSheetContentType.AddCircleAnnotation -> AddCircleSheet(longTappedLocation,
+                            BottomSheetContentType.AddCircleAnnotation -> AddCircleSheet(
+                                longTappedLocation,
                                 onSave = { circle ->
                                     coroutineScope.launch {
                                         viewModel.saveCircle(circle)
@@ -408,28 +401,6 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         style = { MapStyle(style = Style.SATELLITE_STREETS) },
                         modifier = Modifier.fillMaxSize(),
                     ) {
-
-                        // TODO - Extract these into composables
-                        val waypointAnnotations = waypoints.map {
-                            Log.d(
-                                logTag,
-                                "Waypoint: ${it.name} - ${it.position.gridReference}, ${it.position.latLngDecimal}, color: ${it.getColor()}"
-                            )
-                            PointAnnotationOptions().withPoint(it.position.toPoint())
-                                .withIconImage(getMarkerBitmap(ctx, it.markerType))
-                        }
-
-                        PointAnnotationGroup(annotations = waypointAnnotations, onClick = {
-                            val wpt = waypoints.first { w -> w.position.toPoint() == it.point }
-                            Log.d(logTag, "Waypoint tapped: ${wpt.name}")
-
-                            activeWaypoint = wpt
-                            viewModel.setBottomSheetContentType(BottomSheetContentType.ViewWaypointDetail)
-                            viewModel.setBottomSheetVisible(true)
-
-                            true
-                        })
-
                         if (tappedLocation.value != null) {
                             CircleAnnotation(
                                 point = tappedLocation.value,
@@ -509,6 +480,13 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             mapView.mapboxMap.loadStyle(style)
                         }
 
+                        MapWaypoints(waypoints, onWaypointClicked = {
+                            activeWaypoint = it
+                            viewModel.setBottomSheetContentType(BottomSheetContentType.ViewWaypointDetail)
+                            viewModel.setBottomSheetVisible(true)
+                        }, ctx)
+
+
                         // Candidate:
                         if (uiState.longTapAction == LongTapAction.AddPointToPolyline) {
                             MapPolyline(uiState.polyCandidate)
@@ -578,19 +556,50 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
 
 @OptIn(MapboxExperimental::class)
 @Composable
+fun MapWaypoints(
+    waypoints: List<Waypoint>, onWaypointClicked: (Waypoint) -> Unit, context: Context
+) {
+    val waypointAnnotations = waypoints.map {
+        PointAnnotationOptions().withPoint(it.position.toPoint())
+            .withIconImage(getMarkerBitmap(context, it.markerType))
+    }
+
+    val circleAnnotations = waypoints.map {
+        CircleAnnotationOptions().withPoint(it.position.toPoint())
+            .withCircleColor(it.color).withCircleRadius(10.0).withCircleOpacity(0.7)
+    }
+
+    CircleAnnotationGroup(annotations = circleAnnotations, onClick = {
+        val wpt = waypoints.first { w -> w.position.toPoint() == it.point }
+
+        onWaypointClicked(wpt)
+
+        true
+    })
+
+    PointAnnotationGroup(annotations = waypointAnnotations, onClick = {
+        val wpt = waypoints.first { w -> w.position.toPoint() == it.point }
+
+        onWaypointClicked(wpt)
+
+        true
+    })
+}
+
+@OptIn(MapboxExperimental::class)
+@Composable
 fun MapPolylines(polylines: List<Polyline>, onLineClicked: (Polyline) -> Unit) {
     val lines = polylines.map {
-        PolylineAnnotationOptions().withPoints(it.points()).withLineColor(Color.Cyan.toArgb())
+        PolylineAnnotationOptions().withPoints(it.points()).withLineColor(it.color)
             .withLineWidth(3.0)
     }
 
-    val allPoints = mutableListOf<Point>()
-    polylines.forEach { allPoints.addAll(it.points()) }
-
-    val points = allPoints.map {
-        CircleAnnotationOptions().withPoint(it).withCircleRadius(6.0)
-            .withCircleColor(Color.Cyan.toArgb()).withDraggable(false) // TODO - Support draggables
-    }
+    val pts = polylines.map {
+        it.points().map { pt ->
+            CircleAnnotationOptions().withPoint(pt).withCircleRadius(6.0)
+                .withCircleColor(it.color).withDraggable(false) // TODO - Support draggables
+        }
+    }.flatten()
 
     PolylineAnnotationGroup(annotations = lines, onClick = {
         val line = polylines.first { line -> line.points() == it.points }
@@ -598,7 +607,7 @@ fun MapPolylines(polylines: List<Polyline>, onLineClicked: (Polyline) -> Unit) {
 
         true
     })
-    CircleAnnotationGroup(annotations = points, onClick = {
+    CircleAnnotationGroup(annotations = pts, onClick = {
         val line = polylines.first { line -> line.points().contains(it.point) }
         onLineClicked(line)
 
@@ -635,7 +644,7 @@ fun MapCircles(
                     data(geoJsonCircle)
                 })
                 style.addLayer(fillLayer(layerId, sourceId) {
-                    fillColor(Color.Cyan.toArgb())
+                    fillColor(circle.color)
                     fillOpacity(0.4)
                 })
             }
@@ -645,7 +654,7 @@ fun MapCircles(
 
     val points = circles.map {
         CircleAnnotationOptions().withPoint(it.center.toPoint()).withCircleRadius(6.0)
-            .withCircleColor(Color.Blue.toArgb()).withCircleOpacity(0.7)
+            .withCircleColor(it.color).withCircleOpacity(1.0)
             .withDraggable(false) // TODO - Support draggables
     }
 
@@ -662,19 +671,19 @@ fun MapCircles(
 fun MapPolygons(
     polygons: List<Polygon>, onLineClicked: (Polygon) -> Unit
 ) {
-
     val allPoints = mutableListOf<Point>()
     polygons.forEach { allPoints.addAll(it.points()) }
 
-    val points = allPoints.map {
-        CircleAnnotationOptions().withPoint(it).withCircleRadius(4.0)
-            .withCircleColor(Color.Cyan.toArgb()).withCircleOpacity(0.7)
-            .withDraggable(false) // TODO - Support draggables
-    }
+    val pts = polygons.map {
+        it.points().map { pt ->
+            CircleAnnotationOptions().withPoint(pt).withCircleRadius(4.0).withCircleColor(it.color)
+                .withCircleOpacity(0.7)
+        }
+    }.flatten()
 
     val polys = polygons.map {
-        PolygonAnnotationOptions().withPoints(listOf(it.points()))
-            .withFillColor(Color.Cyan.toArgb()).withFillOpacity(0.5)
+        PolygonAnnotationOptions().withPoints(listOf(it.points())).withFillColor(it.color)
+            .withFillOpacity(0.5)
     }
 
     PolygonAnnotationGroup(annotations = polys, onClick = {
@@ -684,7 +693,7 @@ fun MapPolygons(
         true
     })
 
-    CircleAnnotationGroup(annotations = points, onClick = {
+    CircleAnnotationGroup(annotations = pts, onClick = {
         val poly = polygons.first { poly -> poly.points().contains(it.point) }
         onLineClicked(poly)
 
@@ -819,7 +828,7 @@ private fun getMarkerBitmap(context: Context, markerType: WaypointMarkerType): B
     val drawable = ContextCompat.getDrawable(context, drawableId)
 
     if (drawable is BitmapDrawable) {
-        return resizeBitmap(drawable.bitmap)
+        return resizeBitmap(drawable.bitmap, 30)
     }
     throw Exception("Unable to get bitmap for marker type: $markerType")
 }

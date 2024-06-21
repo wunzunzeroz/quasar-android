@@ -18,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,15 +26,15 @@ import androidx.compose.ui.unit.dp
 import com.mapbox.geojson.Point
 import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Position
+import com.quasar.app.map.utils.Utils
 
 @Composable
 fun AddPolylineSheet(
-    points: List<Point>,
-    onSave: (Polyline) -> Unit,
-    modifier: Modifier = Modifier
+    points: List<Point>, onSave: (Polyline) -> Unit, modifier: Modifier = Modifier
 ) {
     var name by remember { mutableStateOf("") }
-    // TODO - Add color
+    var color by remember { mutableStateOf(Color.Magenta) }
+
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -53,9 +54,14 @@ fun AddPolylineSheet(
             ),
             modifier = Modifier.fillMaxWidth()
         )
+        ColorSelectDropdown(initialValue = color, onValueChange = { color = it })
         Spacer(modifier = Modifier.height(8.dp))
         Button(onClick = {
-            val polyline = Polyline(name = name, positions = points.map { Position.fromPoint(it) })
+            val polyline = Polyline(
+                name = name,
+                positions = points.map { Position.fromPoint(it) },
+                color = Utils.convertColorToHexString(color)
+            )
             onSave(polyline)
         }) {
             Text(text = "Save Polyline")
@@ -70,5 +76,5 @@ fun AddPolylineSheet(
 @Preview(showSystemUi = true)
 @Composable
 fun SavePolylineSheetPreview() {
-    AddPolylineSheet(listOf(),{})
+    AddPolylineSheet(listOf(), {})
 }

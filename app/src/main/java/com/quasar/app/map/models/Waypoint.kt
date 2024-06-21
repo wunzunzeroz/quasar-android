@@ -1,9 +1,10 @@
 package com.quasar.app.map.models
 
-import androidx.annotation.DrawableRes
 import androidx.compose.ui.graphics.Color
+import androidx.core.graphics.toColorInt
 import androidx.room.Entity
 import androidx.room.PrimaryKey
+import com.quasar.app.map.utils.Utils
 
 @Entity
 data class Waypoint(
@@ -13,30 +14,34 @@ data class Waypoint(
     val name: String,
     val code: String,
     val markerType: WaypointMarkerType,
-    val markerColor: Long,
+    val color: String,
 ) {
     fun getColor(): Color {
-        return Color(markerColor.toInt()) // Convert Long back to Color
+        return Color(color.toColorInt())
     }
 
     override fun toString(): String {
-        return "Waypoint {Name = $name, Position = ${position.latLngDecimal}, Code = $code, MarkerType = $markerType, MarkerColor = $markerColor}"
+        return "Waypoint {Name = $name, Position = ${position.latLngDecimal}, Code = $code, MarkerType = $markerType, MarkerColor = $color}"
     }
 
     fun withPosition(position: Position): Waypoint {
-        return Waypoint(id, position, name, code, markerType, markerColor)
+        return Waypoint(id, position, name, code, markerType, color)
     }
 
     fun withName(name: String): Waypoint {
-        return Waypoint(id, position, name, code, markerType, markerColor)
+        return Waypoint(id, position, name, code, markerType, color)
     }
 
     fun withCode(code: String): Waypoint {
-        return Waypoint(id, position, name, code, markerType, markerColor)
+        return Waypoint(id, position, name, code, markerType, color)
     }
 
     fun withMarkerType(markerType: WaypointMarkerType): Waypoint {
-        return Waypoint(id, position, name, code, markerType, markerColor)
+        return Waypoint(id, position, name, code, markerType, color)
+    }
+
+    fun withColor(color: Color): Waypoint {
+        return Waypoint(id, position, name, code, markerType, Utils.convertColorToHexString(color))
     }
 }
 

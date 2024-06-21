@@ -18,6 +18,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,13 +27,15 @@ import androidx.compose.ui.unit.dp
 import com.mapbox.geojson.Point
 import com.quasar.app.map.models.Polygon
 import com.quasar.app.map.models.Position
+import com.quasar.app.map.utils.Utils
 
+@OptIn(ExperimentalStdlibApi::class)
 @Composable
 fun AddPolygonSheet(
     points: List<Point>, onSave: (Polygon) -> Unit, modifier: Modifier = Modifier
 ) {
     var name by remember { mutableStateOf("") }
-    // TODO - Add color
+    var color by remember { mutableStateOf(Color.Magenta) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -41,6 +45,7 @@ fun AddPolygonSheet(
         Spacer(modifier = Modifier.height(8.dp))
         Divider()
         Spacer(modifier = Modifier.height(12.dp))
+
 
         TextField(
             value = name,
@@ -52,8 +57,10 @@ fun AddPolygonSheet(
             modifier = Modifier.fillMaxWidth()
         )
         Spacer(modifier = Modifier.height(8.dp))
+        ColorSelectDropdown(onValueChange = {color = it})
+
         Button(onClick = {
-            val polygon = Polygon(name = name, positions = points.map { Position.fromPoint(it) })
+            val polygon = Polygon(name = name, positions = points.map { Position.fromPoint(it) }, color = Utils.convertColorToHexString(color))
             onSave(polygon)
         }) {
             Text(text = "Save Polygon")

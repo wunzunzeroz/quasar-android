@@ -1,11 +1,14 @@
 package com.quasar.app.map.components
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -25,8 +28,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.mapbox.geojson.Point
 import com.quasar.app.map.models.Circle
@@ -41,8 +46,7 @@ fun AddCircleSheet(
     var name by remember { mutableStateOf("") }
     var radius by remember { mutableDoubleStateOf(0.0) }
     var units by remember { mutableStateOf(DistanceUnit.Metres) }
-
-    // TODO - Add color
+    var color by remember { mutableStateOf(Color.Magenta) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -91,7 +95,7 @@ fun AddCircleSheet(
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.fillMaxWidth()
+//                modifier = Modifier.fillMaxWidth()
         ) {
             DistanceUnit.entries.forEach { item ->
                 DropdownMenuItem(
@@ -104,6 +108,7 @@ fun AddCircleSheet(
                     })
             }
         }
+        ColorSelectDropdown(initialValue = color, onValueChange = { color = it })
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -112,7 +117,8 @@ fun AddCircleSheet(
                 name = name,
                 center = Position.fromPoint(center),
                 radius = radius,
-                distanceUnit = units
+                distanceUnit = units,
+                color = Utils.convertColorToHexString(color)
             )
             onSave(circle)
         }) {
@@ -121,4 +127,10 @@ fun AddCircleSheet(
 
         Spacer(modifier = Modifier.height(8.dp))
     }
+}
+
+@Composable
+@Preview(showSystemUi = true)
+fun AddCircleSheetPreview() {
+    AddCircleSheet(center = Point.fromLngLat(174.0, -36.0), onSave = {})
 }

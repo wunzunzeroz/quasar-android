@@ -1,5 +1,7 @@
 package com.quasar.app.map.models
 
+import androidx.compose.ui.graphics.Color
+import androidx.core.graphics.toColorInt
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.mapbox.geojson.Point
@@ -12,8 +14,12 @@ data class Polygon(
     @PrimaryKey(autoGenerate = true)
     val id: Int = 0,
     val name: String,
-    val positions: List<Position>
+    val positions: List<Position>,
+    val color: String
 ) {
+    fun getColor(): Color {
+        return Color(color.toColorInt())
+    }
 
     fun points(): List<Point> {
         return positions.map { it.toPoint() }

@@ -1,5 +1,7 @@
 package com.quasar.app.map.models
 
+import androidx.compose.ui.graphics.Color
+import androidx.core.graphics.toColorInt
 import androidx.room.Entity
 import androidx.room.PrimaryKey
 import com.mapbox.geojson.Feature
@@ -15,8 +17,13 @@ class Circle(
     val name: String,
     val center: Position,
     val radius: Double,
-    val distanceUnit: DistanceUnit
+    val distanceUnit: DistanceUnit,
+    val color: String
 ) {
+    fun getColor(): Color {
+        return Color(color.toColorInt())
+    }
+
     private fun turfUnit(): String {
         return when (distanceUnit) {
             DistanceUnit.Metres -> TurfConstants.UNIT_METRES

@@ -1,6 +1,7 @@
 package com.quasar.app.map.components
 
 import android.util.Log
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -51,6 +52,7 @@ fun ViewWaypointDetailSheet(
     var name by remember { mutableStateOf(waypoint.name) }
     var code by remember { mutableStateOf(waypoint.code) }
     var markerType by remember { mutableStateOf(waypoint.markerType) }
+    var color by remember { mutableStateOf(Color.Magenta) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -61,8 +63,9 @@ fun ViewWaypointDetailSheet(
         Divider()
         Spacer(modifier = Modifier.height(12.dp))
 
-        Row {
+        Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.fillMaxWidth()) {
             WaypointIconDropdown(onValueChange = { markerType = it })
+            ColorSelectDropdown(initialValue = color, onValueChange = {})
         }
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -121,6 +124,7 @@ fun ViewWaypointDetailSheet(
                     .withName(name)
                     .withCode(code)
                     .withMarkerType(markerType)
+                    .withColor(color)
 
                 Log.d("AddWaypointSheet", "Creating waypoint '$name' at $latitude, $longitude")
 
@@ -152,7 +156,7 @@ fun ViewWaypointDetailSheetPreview() {
             "Rangitoto",
             "RANGI",
             WaypointMarkerType.Castle,
-            Color.Magenta.toArgb().toColorLong()
+            Utils.convertColorToHexString(Color.Magenta)
         ),
         onUpdateWaypoint = {},
         onDeleteWaypoint = {}

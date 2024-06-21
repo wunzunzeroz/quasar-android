@@ -56,5 +56,5 @@ fun ViewPolylineSheet(
 @Preview(showSystemUi = true)
 @Composable
 fun ViewPolylineSheetPreview() {
-    ViewPolylineSheet(Polyline(name = "Test line", positions = listOf()), onDelete = {})
+    ViewPolylineSheet(Polyline(name = "Test line", positions = listOf(), color = ""), onDelete = {})
 }

@@ -127,15 +127,7 @@ class MapViewModel(
         _userLocation.update { point }
     }
 
-    suspend fun saveWaypoint(input: CreateWaypointInput) {
-        val waypoint = Waypoint(
-            position = input.position,
-            name = input.name,
-            code = input.code,
-            markerType = input.markerType,
-            markerColor = input.markerColor
-        )
-
+    suspend fun saveWaypoint(waypoint: Waypoint) {
         waypointsRepository.insertWaypoint(waypoint)
     }
 

@@ -2,6 +2,7 @@ package com.quasar.app.map.data
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.toColorInt
 import androidx.room.TypeConverter
 import com.quasar.app.map.models.Position
 
@@ -32,15 +33,4 @@ class Converters {
 
         return positions
     }
-
-    @TypeConverter
-    fun fromColor(color: Color): Long {
-        return color.toArgb().toLong() // Convert Color to Long for storage
-    }
-
-    @TypeConverter
-    fun toColor(value: Long): Color {
-        return Color(value.toInt()) // Convert Long back to Color
-    }
-
 }
