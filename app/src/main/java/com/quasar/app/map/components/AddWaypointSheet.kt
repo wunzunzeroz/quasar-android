@@ -37,6 +37,7 @@ import com.mapbox.geojson.Point
 import com.quasar.app.map.models.Position
 import com.quasar.app.map.models.Waypoint
 import com.quasar.app.map.models.WaypointMarkerType
+import com.quasar.app.map.ui.CoordinateType
 import com.quasar.app.map.ui.getDrawableForWaypointMarker
 import com.quasar.app.map.utils.Utils
 
@@ -44,12 +45,13 @@ import com.quasar.app.map.utils.Utils
 fun AddWaypointSheet(
     location: Point, onCreateWaypoint: (Waypoint) -> Unit, modifier: Modifier = Modifier
 ) {
-    var latitude by remember { mutableDoubleStateOf(location.latitude()) }
-    var longitude by remember { mutableDoubleStateOf(location.longitude()) }
     var name by remember { mutableStateOf("") }
     var code by remember { mutableStateOf("") }
     var markerType by remember { mutableStateOf(WaypointMarkerType.Marker) }
     var markerColor by remember { mutableStateOf(Color.Magenta) }
+
+    var coordinateType by remember { mutableStateOf(CoordinateType.LatLngDec) }
+    var position by remember { mutableStateOf<Position?>(null) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -92,42 +94,27 @@ fun AddWaypointSheet(
         )
 
         Spacer(modifier = Modifier.height(8.dp))
+        CoordinateTypeSelector(value = coordinateType, onSelect = { coordinateType = it })
+        PositionInput(
+            type = coordinateType,
+            onSubmit = { position = it },
+            initialValue = Position.fromPoint(location)
+        )
 
-        Row {
-            TextField(
-                value = Utils.RoundNumberToDp(latitude, 6).toString(),
-                onValueChange = { latitude = it.toDouble() },
-                label = { Text("Latitude") },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
-                ),
-                modifier = Modifier.weight(1.0f)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            TextField(
-                value = Utils.RoundNumberToDp(longitude, 6).toString(),
-                onValueChange = { longitude = it.toDouble() },
-                label = { Text("Longitude") },
-                keyboardOptions = KeyboardOptions.Default.copy(
-                    keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
-                ),
-                modifier = Modifier.weight(1.0f)
-            )
-        }
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(onClick = {
-            val waypoint = Waypoint(
-                position = Position(latitude, longitude),
-                name = name,
-                code = code,
-                markerType = markerType,
-                color = Utils.convertColorToHexString(markerColor)
-            )
+            position?.let {
+                val waypoint = Waypoint(
+                    position = it,
+                    name = name,
+                    code = code,
+                    markerType = markerType,
+                    color = Utils.convertColorToHexString(markerColor)
+                )
 
-            Log.d("AddWaypointSheet", "Creating waypoint '$name' at $latitude, $longitude")
-
-            onCreateWaypoint(waypoint)
+                onCreateWaypoint(waypoint)
+            }
         }, modifier = Modifier.fillMaxWidth()) {
             Text("Create Waypoint")
         }
