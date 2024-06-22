@@ -142,24 +142,27 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                     }
                 }
                 Divider()
-                Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxHeight()) {
+                Column(
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxHeight()
+                ) {
                     Column {
                         NavigationDrawerItem(label = { Text("Waypoints") },
-                            icon = {Icon(Icons.Filled.Place, "")},
+                            icon = { Icon(Icons.Filled.Place, "") },
                             selected = false,
-                            onClick = {navController.navigate(QuasarScreen.WaypointsScreen.name)})
+                            onClick = { navController.navigate(QuasarScreen.WaypointsScreen.name) })
                         NavigationDrawerItem(label = { Text("Polylines") },
-                            icon = {Icon(Icons.Filled.Timeline, "")},
+                            icon = { Icon(Icons.Filled.Timeline, "") },
                             selected = false,
-                            onClick = { /*TODO*/ })
+                            onClick = { navController.navigate(QuasarScreen.PolylinesScreen.name) })
                         NavigationDrawerItem(label = { Text("Polygons") },
-                            icon = {Icon(Icons.Filled.Pentagon, "")},
+                            icon = { Icon(Icons.Filled.Pentagon, "") },
                             selected = false,
-                            onClick = { /*TODO*/ })
+                            onClick = { navController.navigate(QuasarScreen.PolygonsScreen.name) })
                         NavigationDrawerItem(label = { Text("Circles") },
-                            icon = {Icon(Icons.Filled.Circle, "")},
+                            icon = { Icon(Icons.Filled.Circle, "") },
                             selected = false,
-                            onClick = { /*TODO*/ })
+                            onClick = { navController.navigate(QuasarScreen.CirclesScreen.name) })
                     }
                     NavigationDrawerItem(icon = { Icon(Icons.Filled.ExitToApp, "") },
                         label = { Text(text = stringResource(id = R.string.log_out)) },
@@ -246,7 +249,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 viewModel.setBottomSheetVisible(false)
                             })
 
-                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(userLocation,
+                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(
+                                userLocation,
                                 tappedLocation.value,
                                 {
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
@@ -289,7 +293,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 viewModel.setBottomSheetContentType(BottomSheetContentType.AddCircleAnnotation)
                             })
 
-                            BottomSheetContentType.AddCircleAnnotation -> AddCircleSheet(longTappedLocation,
+                            BottomSheetContentType.AddCircleAnnotation -> AddCircleSheet(
+                                longTappedLocation,
                                 onSave = { circle ->
                                     coroutineScope.launch {
                                         viewModel.saveCircle(circle)

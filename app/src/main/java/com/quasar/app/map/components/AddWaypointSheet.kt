@@ -51,7 +51,7 @@ fun AddWaypointSheet(
     var markerColor by remember { mutableStateOf(Color.Magenta) }
 
     var coordinateType by remember { mutableStateOf(CoordinateType.LatLngDec) }
-    var position by remember { mutableStateOf<Position?>(null) }
+    var position by remember { mutableStateOf<Position>(Position.fromPoint(location)) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,

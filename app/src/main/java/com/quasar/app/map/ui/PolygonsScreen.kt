@@ -1,6 +1,5 @@
 package com.quasar.app.map.ui
 
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -29,19 +28,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
-import com.quasar.app.map.models.Waypoint
+import com.quasar.app.map.models.Polygon
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun WaypointsScreen(navController: NavHostController, viewModel: MapViewModel = get()) {
-    val waypoints by viewModel.waypoints.collectAsState()
+fun PolygonsScreen(navController: NavHostController, viewModel: MapViewModel = get()) {
+    val polygons by viewModel.polygons.collectAsState()
     val coroutineScope = rememberCoroutineScope()
 
     Scaffold(topBar = {
         TopAppBar(
-            title = { Text(text = "Waypoints") },
+            title = { Text(text = "Polygons") },
             navigationIcon = {
                 IconButton(onClick = {
                     navController.popBackStack()
@@ -62,10 +61,10 @@ fun WaypointsScreen(navController: NavHostController, viewModel: MapViewModel = 
     }) { contentPadding ->
         Column(modifier = Modifier.padding(contentPadding)) {
             LazyColumn {
-                items(waypoints) { waypoint ->
-                    WaypointRow(waypoint = waypoint, onDelete = {
+                items(polygons) { polygon ->
+                    PolygonRow(polygon = polygon, onDelete = {
                         coroutineScope.launch {
-                            viewModel.deleteWaypoint(it)
+                            viewModel.deletePolygon(it)
                         }
                     })
                 }
@@ -75,21 +74,21 @@ fun WaypointsScreen(navController: NavHostController, viewModel: MapViewModel = 
 }
 
 @Composable
-fun WaypointRow(waypoint: Waypoint, onDelete: (Waypoint) -> Unit, modifier: Modifier = Modifier) {
+fun PolygonRow(polygon: Polygon, onDelete: (Polygon) -> Unit, modifier: Modifier = Modifier) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = modifier.fillMaxWidth()
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(text = waypoint.name, modifier = modifier.padding(8.dp))
+            Text(text = polygon.name, modifier = modifier.padding(8.dp))
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(waypoint.position.gridReference.toString())
+            Text(polygon.area())
             Spacer(modifier = Modifier.width(16.dp))
-            IconButton(onClick = { onDelete(waypoint) }) {
+            IconButton(onClick = { onDelete(polygon) }) {
                 // TODO - Add confirmation dialog
-                Icon(Icons.Filled.Delete, contentDescription = "Delete waypoint")
+                Icon(Icons.Filled.Delete, contentDescription = "Delete polygon")
 
             }
         }
