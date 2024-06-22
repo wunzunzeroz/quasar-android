@@ -137,7 +137,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         scope.launch {
                             drawerState.close()
                         }
-                    }) {
+                    }, modifier = Modifier.padding(horizontal = 8.dp)) {
                         Icon(Icons.Filled.ArrowBack, "Close drawer")
                     }
                 }
@@ -147,7 +147,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         NavigationDrawerItem(label = { Text("Waypoints") },
                             icon = {Icon(Icons.Filled.Place, "")},
                             selected = false,
-                            onClick = { /*TODO*/ })
+                            onClick = {navController.navigate(QuasarScreen.WaypointsScreen.name)})
                         NavigationDrawerItem(label = { Text("Polylines") },
                             icon = {Icon(Icons.Filled.Timeline, "")},
                             selected = false,
