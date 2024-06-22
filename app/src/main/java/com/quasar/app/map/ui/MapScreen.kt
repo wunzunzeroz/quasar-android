@@ -8,11 +8,21 @@ import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Pentagon
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -94,6 +104,7 @@ import com.quasar.app.map.utils.Utils
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
+import kotlinx.coroutines.coroutineScope
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -116,16 +127,49 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
 
         ModalNavigationDrawer(drawerState = drawerState, gesturesEnabled = false, drawerContent = {
             ModalDrawerSheet {
-                Text("QUASAR", modifier = Modifier.padding(16.dp))
-                Divider()
-                NavigationDrawerItem(icon = { Icon(Icons.Filled.ExitToApp, "") },
-                    label = { Text(text = stringResource(id = R.string.log_out)) },
-                    selected = false,
-                    onClick = {
-                        AuthUI.getInstance().signOut(ctx).addOnCompleteListener {
-                            navController.navigate(QuasarScreen.LandingScreen.name)
+                Row(
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Map Data", modifier = Modifier.padding(16.dp))
+
+                    IconButton(onClick = {
+                        scope.launch {
+                            drawerState.close()
                         }
-                    })
+                    }) {
+                        Icon(Icons.Filled.ArrowBack, "Close drawer")
+                    }
+                }
+                Divider()
+                Column(verticalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxHeight()) {
+                    Column {
+                        NavigationDrawerItem(label = { Text("Waypoints") },
+                            icon = {Icon(Icons.Filled.Place, "")},
+                            selected = false,
+                            onClick = { /*TODO*/ })
+                        NavigationDrawerItem(label = { Text("Polylines") },
+                            icon = {Icon(Icons.Filled.Timeline, "")},
+                            selected = false,
+                            onClick = { /*TODO*/ })
+                        NavigationDrawerItem(label = { Text("Polygons") },
+                            icon = {Icon(Icons.Filled.Pentagon, "")},
+                            selected = false,
+                            onClick = { /*TODO*/ })
+                        NavigationDrawerItem(label = { Text("Circles") },
+                            icon = {Icon(Icons.Filled.Circle, "")},
+                            selected = false,
+                            onClick = { /*TODO*/ })
+                    }
+                    NavigationDrawerItem(icon = { Icon(Icons.Filled.ExitToApp, "") },
+                        label = { Text(text = stringResource(id = R.string.log_out)) },
+                        selected = false,
+                        onClick = {
+                            AuthUI.getInstance().signOut(ctx).addOnCompleteListener {
+                                navController.navigate(QuasarScreen.LandingScreen.name)
+                            }
+                        })
+                }
             }
         }) {
             Scaffold(topBar = {
@@ -202,8 +246,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 viewModel.setBottomSheetVisible(false)
                             })
 
-                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(
-                                userLocation,
+                            BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(userLocation,
                                 tappedLocation.value,
                                 {
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
@@ -246,8 +289,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 viewModel.setBottomSheetContentType(BottomSheetContentType.AddCircleAnnotation)
                             })
 
-                            BottomSheetContentType.AddCircleAnnotation -> AddCircleSheet(
-                                longTappedLocation,
+                            BottomSheetContentType.AddCircleAnnotation -> AddCircleSheet(longTappedLocation,
                                 onSave = { circle ->
                                     coroutineScope.launch {
                                         viewModel.saveCircle(circle)
