@@ -161,7 +161,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                     MapViewportState().apply {
                         setCameraOptions {
                             zoom(11.0)
-                            center(Point.fromLngLat(174.831123, -36.833331))
+                            center(userLocation)
                             pitch(0.0)
                             bearing(0.0)
                         }

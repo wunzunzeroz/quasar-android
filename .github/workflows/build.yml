@@ -30,7 +30,7 @@ jobs:
             ${{ runner.os }}-gradle-
 
       - name: Build APK
-        run: ./gradlew assembleRelease -PQUASAR_MAPBOX_SECRET_TOKEN=${{ secrets.QUASAR_MAPBOX_SECRET_TOKEN }}
+        run: ./gradlew assembleDebug -PQUASAR_MAPBOX_SECRET_TOKEN=${{ secrets.QUASAR_MAPBOX_SECRET_TOKEN }}
 
       - name: Create Release
         id: create_release
@@ -42,9 +42,6 @@ jobs:
           release_name: Release ${{ github.run_number }}
           draft: false
           prerelease: false
-
-      - name: List dir
-        run: ls -R
 
       - name: Upload APK to Release
         uses: actions/upload-release-asset@v1
