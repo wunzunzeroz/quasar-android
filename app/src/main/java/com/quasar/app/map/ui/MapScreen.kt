@@ -79,6 +79,7 @@ import com.quasar.app.map.components.BottomBar
 import com.quasar.app.map.components.LocationDetailSheet
 import com.quasar.app.map.components.PermissionRequest
 import com.quasar.app.map.components.AddPolylineSheet
+import com.quasar.app.map.components.GoToLocationSheet
 import com.quasar.app.map.components.SelectMapStyleSheet
 import com.quasar.app.map.components.ViewCircleSheet
 import com.quasar.app.map.components.ViewPolygonSheet
@@ -192,7 +193,15 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     viewModel.setBottomSheetVisible(false)
                                 })
 
-                            BottomSheetContentType.GoToLocation -> TODO()
+                            BottomSheetContentType.GoToLocation -> GoToLocationSheet(onSubmit = {
+                                tappedLocation.value = it.toPoint()
+                                mapViewportState.flyTo(cameraOptions = cameraOptions {
+                                    center(it.toPoint())
+                                    zoom(12.0)
+                                }, MapAnimationOptions.mapAnimationOptions { duration(3000) })
+                                viewModel.setBottomSheetVisible(false)
+                            })
+
                             BottomSheetContentType.ViewLocationDetail -> LocationDetailSheet(
                                 userLocation,
                                 tappedLocation.value,
