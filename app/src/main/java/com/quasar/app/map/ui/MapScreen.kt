@@ -1,9 +1,6 @@
 package com.quasar.app.map.ui
 
 import android.animation.ValueAnimator
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,12 +14,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Pentagon
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Timeline
-import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -54,7 +49,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import com.firebase.ui.auth.AuthUI
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -85,10 +79,11 @@ import com.quasar.app.map.components.AddAnnotationSheet
 import com.quasar.app.map.components.AddCircleSheet
 import com.quasar.app.map.components.AddPolygonSheet
 import com.quasar.app.map.components.AddWaypointSheet
-import com.quasar.app.map.components.BottomBar
+import com.quasar.app.map.components.BottomNav
 import com.quasar.app.map.components.LocationDetailSheet
 import com.quasar.app.map.components.PermissionRequest
 import com.quasar.app.map.components.AddPolylineSheet
+import com.quasar.app.map.components.AnnotationConfirmation
 import com.quasar.app.map.components.GoToLocationSheet
 import com.quasar.app.map.components.SelectMapStyleSheet
 import com.quasar.app.map.components.ViewCircleSheet
@@ -98,13 +93,11 @@ import com.quasar.app.map.components.ViewWaypointDetailSheet
 import com.quasar.app.map.models.Circle
 import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Waypoint
-import com.quasar.app.map.models.WaypointMarkerType
 import com.quasar.app.map.styles.StyleLoader
 import com.quasar.app.map.utils.Utils
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
-import kotlinx.coroutines.coroutineScope
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -198,7 +191,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 )
                 )
             }, bottomBar = {
-                BottomBar()
+                BottomNav(navController)
             }) { contentPadding ->
                 val tappedLocation = remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
                 var longTappedLocation by remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }

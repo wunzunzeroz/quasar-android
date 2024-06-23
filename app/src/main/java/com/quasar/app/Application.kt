@@ -2,6 +2,9 @@ package com.quasar.app
 
 import android.app.Application
 import androidx.room.Room
+import com.quasar.app.channels.data.ChannelRepository
+import com.quasar.app.channels.data.ChannelRepositoryImpl
+import com.quasar.app.channels.ui.ChannelsViewModel
 import com.quasar.app.map.data.AppDatabase
 import com.quasar.app.map.data.CirclesRepository
 import com.quasar.app.map.data.CirclesRepositoryImpl
@@ -36,12 +39,18 @@ val appModule = module {
         MapViewModel(get(), get(), get(), get(), get())
     }
 
+    viewModel {
+        ChannelsViewModel(get())
+    }
+
     // Repositories
     single<WaypointsRepository> { WaypointsRepositoryImpl(get()) }
     single<CirclesRepository> { CirclesRepositoryImpl(get()) }
     single<PolylinesRepository> { PolylinesRepositoryImpl(get()) }
     single<PolygonsRepository> { PolygonsRepositoryImpl(get()) }
     single<SketchRepository> { SketchRepositoryImpl() }
+
+    single<ChannelRepository> { ChannelRepositoryImpl() }
 
     // DAO
     single { get<AppDatabase>().waypointDao() }
