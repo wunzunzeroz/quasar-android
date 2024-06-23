@@ -41,4 +41,8 @@ class ChannelsViewModel(private val channelRepository: ChannelRepository) : View
     suspend fun createChannel(channel: Channel): String {
         return channelRepository.createChannel(channel)
     }
+
+    fun showJoinChannelSheet() {
+        TODO("Not yet implemented")
+    }
 }

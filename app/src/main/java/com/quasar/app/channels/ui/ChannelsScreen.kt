@@ -21,6 +21,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -89,10 +90,21 @@ fun ChannelsScreen(navController: NavHostController, channelViewModel: ChannelsV
                 .padding(horizontal = 16.dp)
                 .padding(top = 8.dp)
         ) {
-            Button(onClick = {
-                channelViewModel.showCreateChannelSheet()
-            }, modifier = Modifier.fillMaxWidth()) {
-                Text("Create Channel")
+            Row(
+                horizontalArrangement = Arrangement.SpaceBetween,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                OutlinedButton(onClick = {
+                    channelViewModel.showJoinChannelSheet()
+                }, modifier = Modifier.weight(1f)) {
+                    Text("Join Channel")
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Button(onClick = {
+                    channelViewModel.showCreateChannelSheet()
+                }, modifier = Modifier.weight(1f)) {
+                    Text("Create Channel")
+                }
             }
             LazyColumn {
                 items(channels, key = { it.name }) { channel ->
