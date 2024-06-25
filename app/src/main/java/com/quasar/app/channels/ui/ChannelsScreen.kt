@@ -33,7 +33,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.quasar.app.channels.components.ChannelRow
 import com.quasar.app.channels.components.CreateChannelSheet
+import com.quasar.app.channels.components.JoinChannelSheet
 import com.quasar.app.map.components.BottomNav
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
@@ -41,12 +43,11 @@ import org.koin.androidx.compose.get
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChannelsScreen(navController: NavHostController, channelViewModel: ChannelsViewModel = get()) {
-//    val channels by channelViewModel.channels.collectAsState()
     val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
 
     val uiState by channelViewModel.uiState.collectAsState()
-    val channels by channelViewModel.chnls.collectAsStateWithLifecycle(emptyList())
+    val channels by channelViewModel.channels.collectAsStateWithLifecycle(emptyList())
 
     Scaffold(topBar = {
         TopAppBar(title = { Text(text = "Channels") }, navigationIcon = {
@@ -78,6 +79,14 @@ fun ChannelsScreen(navController: NavHostController, channelViewModel: ChannelsV
                             channelViewModel.hideBottomSheet()
                         }
                     })
+
+                    BottomSheetContentType.JoinChannel -> JoinChannelSheet(onJoin = {
+                        coroutineScope.launch {
+
+                            channelViewModel.joinChannel(it)
+                            channelViewModel.hideBottomSheet()
+                        }
+                    })
                 }
             }
         }
@@ -91,8 +100,7 @@ fun ChannelsScreen(navController: NavHostController, channelViewModel: ChannelsV
                 .padding(top = 8.dp)
         ) {
             Row(
-                horizontalArrangement = Arrangement.SpaceBetween,
-                modifier = Modifier.fillMaxWidth()
+                horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()
             ) {
                 OutlinedButton(onClick = {
                     channelViewModel.showJoinChannelSheet()
@@ -108,15 +116,7 @@ fun ChannelsScreen(navController: NavHostController, channelViewModel: ChannelsV
             }
             LazyColumn {
                 items(channels, key = { it.name }) { channel ->
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(channel.name)
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Text(channel.description)
-                    }
+                    ChannelRow(channel)
                 }
             }
         }

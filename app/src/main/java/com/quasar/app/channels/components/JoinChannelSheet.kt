@@ -16,32 +16,26 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.quasar.app.channels.models.CreateChannelInput
 
 @Composable
-fun CreateChannelSheet(onCreate: (CreateChannelInput) -> Unit, modifier: Modifier = Modifier) {
-    var name by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
+fun JoinChannelSheet(onJoin: (String) -> Unit, modifier: Modifier = Modifier) {
+    var id by remember { mutableStateOf("") }
 
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = modifier.fillMaxWidth()) {
-        Text("Create Channel")
+        Text("Join Channel")
         Divider()
 
         Spacer(modifier = Modifier.height(32.dp))
 
-        TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
-        TextField(value = description,
-            onValueChange = { description = it },
-            label = { Text("Description") })
+        Text("Enter the ID of the channel you wish to join")
+        TextField(value = id, onValueChange = { id = it }, label = { Text("Channel ID") })
 
         Spacer(modifier = Modifier.height(32.dp))
 
         Button(onClick = {
-            val channel = CreateChannelInput(name = name, description = description)
-
-            onCreate(channel)
+            onJoin(id)
         }, modifier = Modifier.fillMaxWidth()) {
-            Text("Create Channel")
+            Text("Join Channel")
         }
 
     }
