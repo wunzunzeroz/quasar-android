@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.quasar.app.QuasarScreen
 import com.quasar.app.channels.components.ChannelRow
 import com.quasar.app.channels.components.CreateChannelSheet
 import com.quasar.app.channels.components.JoinChannelSheet
@@ -116,7 +117,9 @@ fun ChannelsScreen(navController: NavHostController, channelViewModel: ChannelsV
             }
             LazyColumn {
                 items(channels, key = { it.name }) { channel ->
-                    ChannelRow(channel)
+                    ChannelRow(channel, onChannelSelect = {
+                        navController.navigate("${QuasarScreen.ChannelDetailScreen.name}/${channel.id}")
+                    })
                 }
             }
         }

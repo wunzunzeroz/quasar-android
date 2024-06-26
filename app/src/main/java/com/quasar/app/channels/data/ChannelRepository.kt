@@ -13,12 +13,14 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.util.UUID
 
 
 interface ChannelRepository {
     val channels: Flow<List<Channel>>
-    suspend fun createChannel(channel: CreateChannelInput): String
+    suspend fun createChannel(channelInput: CreateChannelInput): String
     suspend fun joinChannel(channelId: String)
+    suspend fun getChannel(channelId: String): Channel?
 }
 
 class ChannelRepositoryImpl() : ChannelRepository {
@@ -29,6 +31,12 @@ class ChannelRepositoryImpl() : ChannelRepository {
 
     override val channels: Flow<List<Channel>>
         get() = getUserChannels()
+
+    override suspend fun getChannel(channelId: String): Channel? {
+        val channel = db.collection(channelCollection).document(channelId).get().await()
+
+        return channel.toObject(Channel::class.java)
+    }
 
     private fun getUserChannels(): Flow<List<Channel>> = callbackFlow {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
@@ -52,21 +60,23 @@ class ChannelRepositoryImpl() : ChannelRepository {
         awaitClose { subscription.remove() }
     }
 
-    override suspend fun createChannel(channel: CreateChannelInput): String {
+    override suspend fun createChannel(channelInput: CreateChannelInput): String {
         val userDetails = getUserDetails()
         addUserIfNotExists()
 
-        val channelRef = db.collection(channelCollection).add(channel).await()
+        val channelId = UUID.randomUUID().toString()
+        val channel = Channel(channelId, channelInput.name, channelInput.description)
+        db.collection(channelCollection).document(channelId).set(channel).await()
 
         // Add user ID to channel's 'members' array
-        db.collection(channelCollection).document(channelRef.id)
+        db.collection(channelCollection).document(channelId)
             .update("members", FieldValue.arrayUnion(userDetails.userId)).await()
 
         // Add channel ID to user object's 'channels' array
         db.collection(userCollection).document(userDetails.userId)
-            .update("channels", FieldValue.arrayUnion(channelRef.id)).await()
+            .update("channels", FieldValue.arrayUnion(channelId)).await()
 
-        return channelRef.id
+        return channelId
     }
 
     override suspend fun joinChannel(channelId: String) {

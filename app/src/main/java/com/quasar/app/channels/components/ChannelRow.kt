@@ -25,7 +25,11 @@ import com.quasar.app.channels.models.Channel
 import com.quasar.app.channels.models.UserDetails
 
 @Composable
-fun ChannelRow(channel: Channel, modifier: Modifier = Modifier) {
+fun ChannelRow(
+    channel: Channel,
+    onChannelSelect: (Channel) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -52,7 +56,7 @@ fun ChannelRow(channel: Channel, modifier: Modifier = Modifier) {
             }
             Spacer(modifier = Modifier.width(16.dp))
         }
-        IconButton(onClick = {}) {
+        IconButton(onClick = { onChannelSelect(channel) }) {
             Icon(Icons.Filled.ArrowForward, contentDescription = null)
         }
     }
@@ -68,7 +72,8 @@ fun ChannelRowPreview() {
                 "Channel A",
                 "Desc A",
                 listOf("", "", "")
-            )
+            ),
+            {}
         )
         ChannelRow(
             Channel(
@@ -76,7 +81,8 @@ fun ChannelRowPreview() {
                 "Channel B",
                 "Desc B",
                 listOf("", "", "")
-            )
+            ),
+            {}
         )
         ChannelRow(
             Channel(
@@ -84,7 +90,8 @@ fun ChannelRowPreview() {
                 "Channel C",
                 "Desc C",
                 listOf("", "", "")
-            )
+            ),
+            {}
         )
     }
 }
