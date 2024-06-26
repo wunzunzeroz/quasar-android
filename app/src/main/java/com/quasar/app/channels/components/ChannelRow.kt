@@ -50,7 +50,7 @@ fun ChannelRow(
                 Icon(Icons.Filled.Groups, "Member number")
                 Spacer(modifier = Modifier.width(4.dp))
                 Text(
-                    channel.members.count().toString(),
+                    channel.memberCount.toString(),
                     style = MaterialTheme.typography.labelLarge
                 )
             }
@@ -71,7 +71,8 @@ fun ChannelRowPreview() {
                 "channel-a",
                 "Channel A",
                 "Desc A",
-                listOf("", "", "")
+                2,
+                listOf()
             ),
             {}
         )
@@ -80,7 +81,8 @@ fun ChannelRowPreview() {
                 "channel-b",
                 "Channel B",
                 "Desc B",
-                listOf("", "", "")
+                3,
+                listOf()
             ),
             {}
         )
@@ -89,7 +91,8 @@ fun ChannelRowPreview() {
                 "channel-c",
                 "Channel C",
                 "Desc C",
-                listOf("", "", "")
+                1,
+                listOf()
             ),
             {}
         )

@@ -115,11 +115,15 @@ fun ChannelsScreen(navController: NavHostController, channelViewModel: ChannelsV
                     Text("Create Channel")
                 }
             }
-            LazyColumn {
-                items(channels, key = { it.name }) { channel ->
-                    ChannelRow(channel, onChannelSelect = {
-                        navController.navigate("${QuasarScreen.ChannelDetailScreen.name}/${channel.id}")
-                    })
+            if (channels.isEmpty()) {
+                Text("You haven't joined any channels yet")
+            } else {
+                LazyColumn {
+                    items(channels, key = { it.name }) { channel ->
+                        ChannelRow(channel, onChannelSelect = {
+                            navController.navigate("${QuasarScreen.ChannelDetailScreen.name}/${channel.id}")
+                        })
+                    }
                 }
             }
         }

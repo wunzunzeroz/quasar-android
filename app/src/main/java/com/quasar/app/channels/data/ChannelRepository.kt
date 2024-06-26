@@ -1,12 +1,14 @@
 package com.quasar.app.channels.data
 
-import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.firestore.toObject
+import com.google.firebase.firestore.toObjects
 import com.google.firebase.ktx.Firebase
 import com.quasar.app.channels.models.Channel
+import com.quasar.app.channels.models.ChannelMember
 import com.quasar.app.channels.models.CreateChannelInput
 import com.quasar.app.channels.models.UserDetails
 import kotlinx.coroutines.channels.awaitClose
@@ -33,28 +35,54 @@ class ChannelRepositoryImpl() : ChannelRepository {
         get() = getUserChannels()
 
     override suspend fun getChannel(channelId: String): Channel? {
-        val channel = db.collection(channelCollection).document(channelId).get().await()
+        val channelRef = db.collection(channelCollection).document(channelId).get().await()
+        val membersRef =
+            db.collection(channelCollection).document(channelId).collection("members").get().await()
 
-        return channel.toObject(Channel::class.java)
+        val channel = channelRef.toObject<Channel>()
+        val members = membersRef.toObjects<ChannelMember>()
+
+        if (channel == null) {
+            return null
+        }
+
+        val result =
+            Channel(channel.id, channel.name, channel.description, channel.memberCount, members)
+
+        return result
     }
 
     private fun getUserChannels(): Flow<List<Channel>> = callbackFlow {
         val userId = FirebaseAuth.getInstance().currentUser?.uid
             ?: throw IllegalStateException("User not logged in")
 
-        val query = db.collection(channelCollection).whereArrayContains("members", userId)
+        // Get the user's document from the "users" collection
+        val userDocRef = db.collection("users").document(userId)
 
-        val subscription = query.addSnapshotListener { querySnapshot, exception ->
+        val subscription = userDocRef.addSnapshotListener { userSnapshot, exception ->
             if (exception != null) {
                 close(exception)
                 return@addSnapshotListener
             }
 
-            val channels = querySnapshot?.documents?.mapNotNull { document ->
-                document.toObject(Channel::class.java)
-            } ?: emptyList()
+            val channelIds = userSnapshot?.get("channels") as? List<*> ?: emptyList<String>()
 
-            trySend(channels)
+            if (channelIds.isEmpty()) {
+                trySend(emptyList())
+                return@addSnapshotListener
+            }
+
+            // Get all channel documents that match the channel IDs
+            db.collection("channels")
+                .whereIn(FieldPath.documentId(), channelIds)
+                .get()
+                .addOnSuccessListener { querySnapshot ->
+                    val channels = querySnapshot?.toObjects(Channel::class.java) ?: emptyList()
+                    trySend(channels)
+                }
+                .addOnFailureListener { e ->
+                    close(e)
+                }
         }
 
         awaitClose { subscription.remove() }
@@ -64,13 +92,16 @@ class ChannelRepositoryImpl() : ChannelRepository {
         val userDetails = getUserDetails()
         addUserIfNotExists()
 
+        val channelMember = ChannelMember(userDetails.userId, userDetails.name)
+
         val channelId = UUID.randomUUID().toString()
-        val channel = Channel(channelId, channelInput.name, channelInput.description)
+        val channel =
+            Channel(channelId, channelInput.name, channelInput.description, memberCount = 1)
         db.collection(channelCollection).document(channelId).set(channel).await()
 
         // Add user ID to channel's 'members' array
-        db.collection(channelCollection).document(channelId)
-            .update("members", FieldValue.arrayUnion(userDetails.userId)).await()
+        db.collection(channelCollection).document(channelId).collection("members")
+            .document(userDetails.userId).set(channelMember).await()
 
         // Add channel ID to user object's 'channels' array
         db.collection(userCollection).document(userDetails.userId)
@@ -81,12 +112,13 @@ class ChannelRepositoryImpl() : ChannelRepository {
 
     override suspend fun joinChannel(channelId: String) {
         val userDetails = getUserDetails()
+        val channelMember = ChannelMember(userDetails.userId, userDetails.name)
 
         // TODO - Handle channel doesn't exist
         val channelRef = db.collection(channelCollection).document(channelId)
 
-        // Add user Id to channel's 'members' array
-        channelRef.update("members", FieldValue.arrayUnion(userDetails.userId)).await()
+        channelRef.collection("members").document(userDetails.userId).set(channelMember).await()
+        channelRef.update("memberCount", FieldValue.increment(1)).await()
     }
 
     private suspend fun addUserIfNotExists() {

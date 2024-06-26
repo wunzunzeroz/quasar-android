@@ -48,7 +48,7 @@ fun ChannelDetailScreen(
     }
 
     Scaffold(topBar = {
-        TopAppBar(title = { Text(channel?.name ?: "") }, navigationIcon = {
+        TopAppBar(title = { Text("Channel Details") }, navigationIcon = {
             IconButton(onClick = {
                 navController.popBackStack()
             }) {
@@ -84,7 +84,7 @@ fun ChannelDetailScreen(
                 Text("Members:", style = MaterialTheme.typography.titleMedium)
                 LazyColumn {
                     items(channel.members) { member ->
-                        Text(member)
+                        Text(member.name)
                     }
                 }
             } ?: Text("Loading...")
