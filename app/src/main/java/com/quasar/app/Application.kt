@@ -36,7 +36,7 @@ class Quasar : Application() {
 val appModule = module {
     // ViewModels
     viewModel {
-        MapViewModel(get(), get(), get(), get(), get())
+        MapViewModel(get(), get(), get(), get(), get(), get())
     }
 
     viewModel {

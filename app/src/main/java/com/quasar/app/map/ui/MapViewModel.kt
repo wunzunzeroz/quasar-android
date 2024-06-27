@@ -3,6 +3,7 @@ package com.quasar.app.map.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mapbox.geojson.Point
+import com.quasar.app.channels.data.ChannelRepository
 import com.quasar.app.map.data.CirclesRepository
 import com.quasar.app.map.data.PolygonsRepository
 import com.quasar.app.map.data.PolylinesRepository
@@ -27,13 +28,16 @@ class MapViewModel(
     private val circlesRepository: CirclesRepository,
     private val polylinesRepository: PolylinesRepository,
     private val polygonsRepository: PolygonsRepository,
-    private val sketchRepository: SketchRepository
+    private val sketchRepository: SketchRepository,
+    private val channelRepository: ChannelRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     private val _userLocation = MutableStateFlow(Point.fromLngLat(174.858, -36.787))
     val userLocation: StateFlow<Point> = _userLocation.asStateFlow()
+
+    val lastLocations = channelRepository.lastLocations
 
     val waypoints: StateFlow<List<Waypoint>> =
         waypointsRepository.getAllWaypoints().map { it }.stateIn(

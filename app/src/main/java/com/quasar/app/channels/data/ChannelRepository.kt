@@ -14,12 +14,15 @@ import com.quasar.app.channels.models.UserDetails
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 
 interface ChannelRepository {
     val channels: Flow<List<Channel>>
+    val lastLocations: Flow<List<ChannelMember>>
+
     suspend fun createChannel(channelInput: CreateChannelInput): String
     suspend fun joinChannel(channelId: String)
     suspend fun getChannel(channelId: String): Channel?
@@ -33,6 +36,9 @@ class ChannelRepositoryImpl() : ChannelRepository {
 
     override val channels: Flow<List<Channel>>
         get() = getUserChannels()
+
+    override val lastLocations: Flow<List<ChannelMember>>
+        get() = getAllChannelMembersForUser()
 
     override suspend fun getChannel(channelId: String): Channel? {
         val channelRef = db.collection(channelCollection).document(channelId).get().await()
@@ -50,6 +56,50 @@ class ChannelRepositoryImpl() : ChannelRepository {
             Channel(channel.id, channel.name, channel.description, channel.memberCount, members)
 
         return result
+    }
+
+    private suspend fun getJoinedChannels(userId: String): List<String> {
+        val userRef = db.collection(userCollection).document(userId)
+
+        val channels = userRef.get().await().get("channels") as? List<*>
+
+        val result = channels?.filterIsInstance<String>()
+
+        return result ?: listOf()
+    }
+
+    private fun getAllChannelMembersForUser(): Flow<List<ChannelMember>> = callbackFlow {
+        try {
+            val userId = getUserDetails().userId
+
+            val joinedChannels = getJoinedChannels(userId)
+
+            println("JOINED CHANNELS: $joinedChannels")
+
+            val query = db.collectionGroup("members")
+                .whereIn("channelId", joinedChannels)
+
+            val subscription = query.addSnapshotListener { querySnapshot, exception ->
+                if (exception != null) {
+                    close(exception)
+                    return@addSnapshotListener
+                }
+
+                val members = querySnapshot?.documents?.mapNotNull { document ->
+                    document.toObject<ChannelMember>()
+                }?.filter { it.id != userId } ?: emptyList()
+
+                println("MEMBERS: $members")
+
+                // Emit the list of ChannelMember objects
+                trySend(members).isSuccess
+            }
+
+            // Wait for the listener to be removed
+            awaitClose { subscription.remove() }
+        } catch (e: Exception) {
+            trySend(emptyList()).isSuccess
+        }
     }
 
     private fun getUserChannels(): Flow<List<Channel>> = callbackFlow {

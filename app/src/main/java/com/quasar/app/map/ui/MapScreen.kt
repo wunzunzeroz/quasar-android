@@ -49,6 +49,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.firebase.ui.auth.AuthUI
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -65,9 +66,13 @@ import com.mapbox.maps.extension.compose.MapEffect
 import com.mapbox.maps.extension.compose.MapboxMap
 import com.mapbox.maps.extension.compose.animation.viewport.MapViewportState
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotation
+import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGroup
+import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
 import com.mapbox.maps.extension.compose.style.MapStyle
 import com.mapbox.maps.plugin.PuckBearing
 import com.mapbox.maps.plugin.animation.MapAnimationOptions
+import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
+import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.plugin.gestures.generated.GesturesSettings
 import com.mapbox.maps.plugin.locationcomponent.LocationConsumer
 import com.mapbox.maps.plugin.locationcomponent.createDefault2DPuck
@@ -75,6 +80,7 @@ import com.mapbox.maps.plugin.locationcomponent.location
 import com.mapbox.turf.TurfMeasurement
 import com.quasar.app.QuasarScreen
 import com.quasar.app.R
+import com.quasar.app.channels.models.ChannelMember
 import com.quasar.app.map.components.AddAnnotationSheet
 import com.quasar.app.map.components.AddCircleSheet
 import com.quasar.app.map.components.AddPolygonSheet
@@ -98,6 +104,7 @@ import com.quasar.app.map.utils.Utils
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
+import com.quasar.app.map.models.WaypointMarkerType
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -217,6 +224,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 val polylines by viewModel.polylines.collectAsState()
                 val polygons by viewModel.polygons.collectAsState()
                 val circles by viewModel.circles.collectAsState()
+
+                val lastLocations by viewModel.lastLocations.collectAsStateWithLifecycle(listOf())
 
                 val coroutineScope = rememberCoroutineScope()
 
@@ -532,6 +541,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             viewModel.setBottomSheetContentType(BottomSheetContentType.ViewCircleDetail)
                             viewModel.setBottomSheetVisible(true)
                         })
+                        LastLocations(lastLocations)
                     } // End MapboxMap
 
                     MapUiOverlay(onLayerButtonClick = {
@@ -577,6 +587,30 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
         }
 
     }
+}
+
+@OptIn(MapboxExperimental::class)
+@Composable
+fun LastLocations(lastLocations: List<ChannelMember>) {
+    val ll = lastLocations.filter { it.lastLocation != null }
+
+    val waypointAnnotations = ll.map {
+        PointAnnotationOptions().withPoint(Point.fromLngLat(it.lastLocation!!.longitude, it.lastLocation.latitude))
+            .withIconImage(getMarkerBitmap(LocalContext.current, WaypointMarkerType.Person))
+    }
+
+    val circleAnnotations = ll.map {
+        CircleAnnotationOptions().withPoint(Point.fromLngLat(it.lastLocation!!.longitude, it.lastLocation.latitude))
+            .withCircleColor(Color.Magenta.toArgb()).withCircleRadius(10.0).withCircleOpacity(0.7)
+    }
+
+    CircleAnnotationGroup(annotations = circleAnnotations, onClick = {
+        true
+    })
+
+    PointAnnotationGroup(annotations = waypointAnnotations, onClick = {
+        true
+    })
 }
 
 fun getArea(points: List<Point>): String {
