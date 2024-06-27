@@ -12,6 +12,7 @@ import com.quasar.app.map.data.WaypointsRepository
 import com.quasar.app.map.models.Circle
 import com.quasar.app.map.models.Polygon
 import com.quasar.app.map.models.Polyline
+import com.quasar.app.map.models.Position
 import com.quasar.app.map.models.Waypoint
 import com.quasar.app.map.styles.MapStyle
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,7 @@ class MapViewModel(
     private val polylinesRepository: PolylinesRepository,
     private val polygonsRepository: PolygonsRepository,
     private val sketchRepository: SketchRepository,
-    locationRepository: LocationRepository
+    private val locationRepository: LocationRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -168,5 +169,10 @@ class MapViewModel(
 
     suspend fun deleteCircle(circle: Circle) {
         circlesRepository.delete(circle)
+    }
+
+    suspend fun broadcastUserLocation(position: Position) {
+        locationRepository.updateUserLocation(position)
+
     }
 }

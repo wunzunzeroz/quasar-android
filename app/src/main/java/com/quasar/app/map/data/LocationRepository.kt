@@ -1,6 +1,8 @@
 package com.quasar.app.map.data
 
+import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.toObject
 import com.google.firebase.ktx.Firebase
@@ -11,22 +13,43 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.tasks.await
+import java.time.Instant
 
 interface LocationRepository {
     val channelMemberLocations: Flow<List<ChannelMemberLocation>>
-    fun updateUserLocation(location: Position)
+    suspend fun updateUserLocation(location: Position)
 }
 
 class LocationRepositoryImpl : LocationRepository {
     private val db = Firebase.firestore
     private val userCollection = "users"
+    private val channelCollection = "channels"
     private val channelMemberCollection = "members"
 
     override val channelMemberLocations: Flow<List<ChannelMemberLocation>>
         get() = getChannelMemberLocationsForUser()
 
-    override fun updateUserLocation(location: Position) {
-        TODO("Not yet implemented")
+    override suspend fun updateUserLocation(location: Position) {
+        try {
+            val userDetails = getUserDetails()
+            val userChannelIds = getJoinedChannels(userDetails.userId)
+
+            userChannelIds.forEach { channelId ->
+                val update = FirebaseChannelMember(
+                    userDetails.userId,
+                    channelId,
+                    userDetails.name,
+                    Instant.now().toString(),
+                    GeoPoint(location.latLngDecimal.latitude, location.latLngDecimal.longitude)
+                )
+                db.collection(channelCollection).document(channelId)
+                    .collection(channelMemberCollection)
+                    .document(update.id).set(update).await()
+            }
+            Log.d("LocationRepository", "User location updated successfully.")
+        } catch (e: Exception) {
+            Log.e("LocationRepository", "Error updating user location: ${e.message}")
+        }
     }
 
     private fun getChannelMemberLocationsForUser(): Flow<List<ChannelMemberLocation>> =
@@ -34,6 +57,13 @@ class LocationRepositoryImpl : LocationRepository {
             try {
                 val userId = getUserDetails().userId
                 val joinedChannels = getJoinedChannels(userId)
+
+                if (joinedChannels.isEmpty()) {
+                    // If there are no joined channels, emit an empty list and close the flow
+                    trySend(emptyList()).isSuccess
+                    close()
+                    return@callbackFlow
+                }
 
                 val query =
                     db.collectionGroup(channelMemberCollection).whereIn("channelId", joinedChannels)

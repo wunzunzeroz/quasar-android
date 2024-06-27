@@ -7,6 +7,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.toObject
 import com.google.firebase.firestore.toObjects
 import com.google.firebase.ktx.Firebase
+import com.mapbox.maps.extension.style.expressions.dsl.generated.get
 import com.quasar.app.channels.models.Channel
 import com.quasar.app.channels.models.FirebaseChannelMember
 import com.quasar.app.channels.models.CreateChannelInput
@@ -54,8 +55,48 @@ class ChannelRepositoryImpl() : ChannelRepository {
     }
 
     private fun getUserChannels(): Flow<List<Channel>> = callbackFlow {
-        val userId = FirebaseAuth.getInstance().currentUser?.uid
-            ?: throw IllegalStateException("User not logged in")
+        try {
+            addUserIfNotExists()
+            val userId = getUserDetails().userId
+
+            // Get the user's document from the "users" collection
+            val userDocRef = db.collection("users").document(userId)
+
+            val subscription = userDocRef.addSnapshotListener { userSnapshot, exception ->
+                if (exception != null) {
+                    close(exception)
+                    return@addSnapshotListener
+                }
+
+                val channelIds = userSnapshot?.get("channels") as? List<String> ?: emptyList()
+
+                if (channelIds.isEmpty()) {
+                    trySend(emptyList()).isSuccess
+                    return@addSnapshotListener
+                }
+
+                // Get all channel documents that match the channel IDs
+                db.collection("channels").whereIn(FieldPath.documentId(), channelIds).get()
+                    .addOnSuccessListener { querySnapshot ->
+                        val channels = querySnapshot?.toObjects(Channel::class.java) ?: emptyList()
+                        trySend(channels).isSuccess
+                    }.addOnFailureListener { e ->
+                        close(e)
+                    }
+            }
+
+            awaitClose { subscription.remove() }
+        } catch (e: Exception) {
+            // Log the error for debugging purposes
+            println("Error fetching user channels: ${e.message}")
+            trySend(emptyList()).isSuccess
+            close(e)
+        }
+    }
+
+    private fun getUserChannels2(): Flow<List<Channel>> = callbackFlow {
+        addUserIfNotExists()
+        val userId = getUserDetails().userId
 
         // Get the user's document from the "users" collection
         val userDocRef = db.collection("users").document(userId)
@@ -65,6 +106,7 @@ class ChannelRepositoryImpl() : ChannelRepository {
                 close(exception)
                 return@addSnapshotListener
             }
+
 
             val channelIds = userSnapshot?.get("channels") as? List<*> ?: emptyList<String>()
 
@@ -84,6 +126,16 @@ class ChannelRepositoryImpl() : ChannelRepository {
         }
 
         awaitClose { subscription.remove() }
+    }
+
+    private suspend fun getJoinedChannels(userId: String): List<String> {
+        val userRef = db.collection(userCollection).document(userId)
+
+        val channels = userRef.get().await().get("channels") as? List<*>
+
+        val result = channels?.filterIsInstance<String>()
+
+        return result ?: listOf()
     }
 
     override suspend fun createChannel(channelInput: CreateChannelInput): String {

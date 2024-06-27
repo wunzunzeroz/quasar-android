@@ -99,6 +99,7 @@ import com.quasar.app.map.utils.Utils
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
+import com.quasar.app.map.models.Position
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -219,6 +220,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 val polygons by viewModel.polygons.collectAsState()
                 val circles by viewModel.circles.collectAsState()
 
+                // TODO - What is going on here?
                 val lastLocations by viewModel.channelMemberLocations.collectAsStateWithLifecycle(
                     listOf()
                 )
@@ -254,7 +256,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
                                 })
 
-                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(tappedLocation.value,
+                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(
+                                tappedLocation.value,
                                 onCreateWaypoint = {
                                     coroutineScope.launch {
                                         viewModel.saveWaypoint(it)
@@ -301,8 +304,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     }
                                 })
 
-                            BottomSheetContentType.AddPolylineAnnotation -> AddPolylineSheet(
-                                points = uiState.polyCandidate,
+                            BottomSheetContentType.AddPolylineAnnotation -> AddPolylineSheet(points = uiState.polyCandidate,
                                 onSave = { polyline ->
                                     coroutineScope.launch {
                                         viewModel.savePolyline(polyline)
@@ -312,8 +314,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     }
                                 })
 
-                            BottomSheetContentType.AddPolygonAnnotation -> AddPolygonSheet(
-                                points = uiState.polyCandidate,
+                            BottomSheetContentType.AddPolygonAnnotation -> AddPolygonSheet(points = uiState.polyCandidate,
                                 onSave = { polygon ->
                                     coroutineScope.launch {
                                         viewModel.savePolygon(polygon)
@@ -478,8 +479,14 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                                     location.first().latitude()
                                                 }/${location.first().longitude()}"
                                             )
-                                            location.first()
-                                                .let { point -> viewModel.setUserLocation(point) }
+                                            location.first().let { point ->
+                                                val position = Position.fromPoint(point)
+
+                                                viewModel.setUserLocation(point)
+                                                coroutineScope.launch {
+                                                    viewModel.broadcastUserLocation(position)
+                                                }
+                                            }
 
                                         }
 
