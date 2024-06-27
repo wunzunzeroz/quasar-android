@@ -5,5 +5,5 @@ data class Channel(
     val name: String = "",
     val description: String = "",
     val memberCount: Int = 0,
-    val members: List<ChannelMember> = listOf()
+    val members: List<FirebaseChannelMember> = listOf()
 )

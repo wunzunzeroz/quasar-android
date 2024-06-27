@@ -11,7 +11,6 @@ class ChannelsViewModel(private val channelRepository: ChannelRepository) : View
     val uiState = MutableStateFlow(UiState())
 
     val channels = channelRepository.channels
-    val members = channelRepository.lastLocations
 
     fun showCreateChannelSheet() {
         uiState.update { current ->

@@ -8,6 +8,8 @@ import com.quasar.app.channels.ui.ChannelsViewModel
 import com.quasar.app.map.data.AppDatabase
 import com.quasar.app.map.data.CirclesRepository
 import com.quasar.app.map.data.CirclesRepositoryImpl
+import com.quasar.app.map.data.LocationRepository
+import com.quasar.app.map.data.LocationRepositoryImpl
 import com.quasar.app.map.data.PolygonsRepository
 import com.quasar.app.map.data.PolygonsRepositoryImpl
 import com.quasar.app.map.data.PolylinesRepository
@@ -51,6 +53,7 @@ val appModule = module {
     single<SketchRepository> { SketchRepositoryImpl() }
 
     single<ChannelRepository> { ChannelRepositoryImpl() }
+    single<LocationRepository> { LocationRepositoryImpl() }
 
     // DAO
     single { get<AppDatabase>().waypointDao() }

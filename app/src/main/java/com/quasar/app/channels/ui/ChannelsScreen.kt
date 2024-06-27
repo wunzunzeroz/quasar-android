@@ -50,8 +50,6 @@ fun ChannelsScreen(navController: NavHostController, channelViewModel: ChannelsV
     val uiState by channelViewModel.uiState.collectAsState()
     val channels by channelViewModel.channels.collectAsStateWithLifecycle(emptyList())
 
-    val members by channelViewModel.members.collectAsStateWithLifecycle(emptyList())
-
     Scaffold(topBar = {
         TopAppBar(title = { Text(text = "Channels") }, navigationIcon = {
             IconButton(onClick = {
@@ -125,13 +123,6 @@ fun ChannelsScreen(navController: NavHostController, channelViewModel: ChannelsV
                         ChannelRow(channel, onChannelSelect = {
                             navController.navigate("${QuasarScreen.ChannelDetailScreen.name}/${channel.id}")
                         })
-                    }
-                }
-
-                Text("All Members")
-                LazyColumn {
-                    items(members) {member ->
-                        Text(member.name)
                     }
                 }
             }
