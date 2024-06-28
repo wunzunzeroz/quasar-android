@@ -11,6 +11,18 @@ data class Distance(val value: Double, val unit: DistanceUnit) {
         }
     }
 
+    override fun toString(): String {
+        return "$value ${getUnitAbbrev()}"
+    }
+
+    private fun getUnitAbbrev(): String {
+        return when (unit) {
+            DistanceUnit.Metres -> "m"
+            DistanceUnit.Kilometres -> "km"
+            DistanceUnit.NauticalMiles -> "nm"
+        }
+    }
+
     /**
      * @param[speed] The speed at which to cover distance
      * @return Time in seconds to cover distance at given speed

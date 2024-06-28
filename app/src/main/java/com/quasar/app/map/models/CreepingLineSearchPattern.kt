@@ -19,7 +19,7 @@ class CreepingLineSearchPattern(
 
         val searchLegs = mutableListOf<SearchLeg>()
 
-        for (i in 1..legCount) {
+        for (i in 1..(legCount + 1)) {
 
             val distance = if (i == 1) {
                 legDistance / 2

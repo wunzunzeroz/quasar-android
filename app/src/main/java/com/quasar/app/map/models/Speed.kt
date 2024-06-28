@@ -8,6 +8,18 @@ data class Speed(val value: Double, val unit: SpeedUnit) {
             SpeedUnit.Kmh -> value * 0.277778
         }
     }
+
+    override fun toString(): String {
+        return "$value ${getUnitAbbrev()}"
+    }
+
+    private fun getUnitAbbrev(): String {
+        return when (unit) {
+            SpeedUnit.Mps -> "m/s"
+            SpeedUnit.Kts -> "knots"
+            SpeedUnit.Kmh -> "kmh"
+        }
+    }
 }
 
 enum class SpeedUnit {

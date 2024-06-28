@@ -1,9 +1,6 @@
 package com.quasar.app.map.ui
 
 import android.animation.ValueAnimator
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,12 +14,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Pentagon
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Timeline
-import androidx.compose.material3.Button
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -41,6 +36,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -54,7 +50,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.navigation.NavHostController
 import com.firebase.ui.auth.AuthUI
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -83,6 +78,7 @@ import com.quasar.app.QuasarScreen
 import com.quasar.app.R
 import com.quasar.app.map.components.AddAnnotationSheet
 import com.quasar.app.map.components.AddCircleSheet
+import com.quasar.app.map.components.AddCreepingLineSearchPatternSheet
 import com.quasar.app.map.components.AddPolygonSheet
 import com.quasar.app.map.components.AddWaypointSheet
 import com.quasar.app.map.components.BottomBar
@@ -92,19 +88,25 @@ import com.quasar.app.map.components.AddPolylineSheet
 import com.quasar.app.map.components.GoToLocationSheet
 import com.quasar.app.map.components.SelectMapStyleSheet
 import com.quasar.app.map.components.ViewCircleSheet
+import com.quasar.app.map.components.ViewCreepingLineSearchDetailSheet
 import com.quasar.app.map.components.ViewPolygonSheet
 import com.quasar.app.map.components.ViewPolylineSheet
 import com.quasar.app.map.components.ViewWaypointDetailSheet
 import com.quasar.app.map.models.Circle
+import com.quasar.app.map.models.CreepingLineSearchPattern
+import com.quasar.app.map.models.Distance
+import com.quasar.app.map.models.DistanceUnit
+import com.quasar.app.map.models.Heading
 import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Waypoint
-import com.quasar.app.map.models.WaypointMarkerType
 import com.quasar.app.map.styles.StyleLoader
 import com.quasar.app.map.utils.Utils
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
-import kotlinx.coroutines.coroutineScope
+import com.quasar.app.map.models.Position
+import com.quasar.app.map.models.Speed
+import com.quasar.app.map.models.SpeedUnit
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -227,6 +229,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
 
                 val coroutineScope = rememberCoroutineScope()
 
+                var activeCreepingLine: CreepingLineSearchPattern? by remember { mutableStateOf(null) }
+                val creepingLines = remember { mutableStateListOf<CreepingLineSearchPattern>() }
 
                 if (uiState.bottomSheetVisible) {
                     ModalBottomSheet(onDismissRequest = {
@@ -291,6 +295,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             }, onAddCircle = {
                                 viewModel.addPointToPolyCandidate(longTappedLocation)
                                 viewModel.setBottomSheetContentType(BottomSheetContentType.AddCircleAnnotation)
+                            }, onAddCreepingLineSearch = {
+                                viewModel.setBottomSheetContentType(BottomSheetContentType.AddCreepingLineSearch)
                             })
 
                             BottomSheetContentType.AddCircleAnnotation -> AddCircleSheet(
@@ -349,6 +355,20 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                         viewModel.setBottomSheetVisible(false)
                                     }
                                 })
+                            }
+
+                            BottomSheetContentType.AddCreepingLineSearch -> AddCreepingLineSearchPatternSheet(
+                                datum = longTappedLocation,
+                                onCreatePattern = {
+                                    creepingLines.add(it)
+                                    viewModel.setBottomSheetVisible(false)
+                                }
+                            )
+
+                            BottomSheetContentType.ViewCreepingLineSearchDetail -> activeCreepingLine?.let { search ->
+                                ViewCreepingLineSearchDetailSheet(
+                                    search = search,
+                                )
                             }
                         }
                     }
@@ -511,6 +531,20 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         MapWaypoints(waypoints, onWaypointClicked = {
                             activeWaypoint = it
                             viewModel.setBottomSheetContentType(BottomSheetContentType.ViewWaypointDetail)
+                            viewModel.setBottomSheetVisible(true)
+                        })
+
+                        val testSearch = CreepingLineSearchPattern(
+                            Position(-36.8374, 174.8203),
+                            Heading(45),
+                            Speed(10.0, SpeedUnit.Kts),
+                            sweepWidth = Distance(100.0, DistanceUnit.Metres),
+                            legCount = 15,
+                            legDistance = Distance(1000.0, DistanceUnit.Metres)
+                        )
+                        MapCreepingLineSearchPatterns(creepingLines, onPatternClicked = {
+                            activeCreepingLine = it
+                            viewModel.setBottomSheetContentType(BottomSheetContentType.ViewCreepingLineSearchDetail)
                             viewModel.setBottomSheetVisible(true)
                         })
 
