@@ -1,4 +1,4 @@
-package com.quasar.app.map.ui
+package com.quasar.app.map.models
 
 enum class DistanceUnit {
     Metres,

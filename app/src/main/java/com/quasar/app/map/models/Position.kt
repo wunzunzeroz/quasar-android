@@ -1,6 +1,7 @@
 package com.quasar.app.map.models
 
 import com.mapbox.geojson.Point
+import com.mapbox.turf.TurfMeasurement
 import com.quasar.app.map.utils.Utils
 import org.locationtech.proj4j.BasicCoordinateTransform
 import org.locationtech.proj4j.CRSFactory
@@ -15,6 +16,18 @@ class Position(latitude: Double, longitude: Double) {
 
     fun toPoint(): Point {
         return Point.fromLngLat(latLngDecimal.longitude, latLngDecimal.latitude)
+    }
+
+    fun move(heading: Heading, distance: Distance): Position {
+        val point = this.toPoint()
+        val moved = TurfMeasurement.destination(
+            point,
+            distance.value.toDouble(),
+            heading.value.toDouble(),
+            distance.toTurfUnit()
+        )
+
+        return Position.fromPoint(moved)
     }
 
     fun toShareableString(): String {

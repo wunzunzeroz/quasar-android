@@ -1,14 +1,11 @@
 package com.quasar.app.map.components
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -36,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.mapbox.geojson.Point
 import com.quasar.app.map.models.Circle
 import com.quasar.app.map.models.Position
-import com.quasar.app.map.ui.DistanceUnit
+import com.quasar.app.map.models.DistanceUnit
 import com.quasar.app.map.utils.Utils
 
 @Composable

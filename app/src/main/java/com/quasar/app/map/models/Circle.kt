@@ -9,7 +9,6 @@ import com.mapbox.geojson.FeatureCollection
 import com.mapbox.geojson.Polygon
 import com.mapbox.turf.TurfConstants
 import com.mapbox.turf.TurfTransformation
-import com.quasar.app.map.ui.DistanceUnit
 
 @Entity
 class Circle(
