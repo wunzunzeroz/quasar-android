@@ -118,7 +118,7 @@ fun AddCreepingLineSearchPatternSheet(
         Spacer(modifier = Modifier.height(8.dp))
 
         Button(onClick = {
-            val search = SearchPattern.CreateCreepingLineSearch(
+            val search = SearchPattern.createCreepingLineSearch(
                 startPoint = Position.fromPoint(datum),
                 trackDirection = Heading(trackDirection),
                 speed = Speed(speed.toDouble(), SpeedUnit.Kts),

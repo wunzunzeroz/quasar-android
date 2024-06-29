@@ -6,13 +6,19 @@ import androidx.room.TypeConverters
 import com.quasar.app.map.models.Circle
 import com.quasar.app.map.models.Polygon
 import com.quasar.app.map.models.Polyline
+import com.quasar.app.map.models.SearchPattern
 import com.quasar.app.map.models.Waypoint
 
-@Database(entities = [Waypoint::class, Polyline::class, Polygon::class, Circle::class], version = 1, exportSchema = false)
+@Database(
+    entities = [Waypoint::class, Polyline::class, Polygon::class, Circle::class, SearchPattern::class],
+    version = 1,
+    exportSchema = false
+)
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun waypointDao(): WaypointDao
     abstract fun polylineDao(): PolylineDao
     abstract fun polygonDao(): PolygonDao
     abstract fun circleDao(): CircleDao
+    abstract fun searchPatternDao(): SearchPatternDao
 }

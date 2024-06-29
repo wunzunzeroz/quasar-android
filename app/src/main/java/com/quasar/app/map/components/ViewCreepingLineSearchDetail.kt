@@ -67,7 +67,7 @@ fun SearchLegRow(leg: SearchLeg, rowNumber: Int, modifier: Modifier = Modifier) 
     }
 }
 
-val searchPattern = SearchPattern.CreateCreepingLineSearch(
+private val searchPattern = SearchPattern.createCreepingLineSearch(
     startPoint = Position(0.0, 0.0),
     trackDirection = Heading(0),
     speed = Speed(10.0, SpeedUnit.Kts),

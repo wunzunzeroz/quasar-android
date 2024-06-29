@@ -9,8 +9,8 @@ class CreepingLineISearchPatternTest {
     fun getLegs() {
         val legDistance = Distance(500.0, DistanceUnit.Metres)
 
-        val searchPattern = CreepingLineSearchPattern(
-            datum = Position(0.0, 0.0),
+        val searchPattern = SearchPattern.createCreepingLineSearch(
+            startPoint = Position(0.0, 0.0),
             trackDirection = Heading(0),
             speed = Speed(10.0, SpeedUnit.Kts),
             legCount = 8,

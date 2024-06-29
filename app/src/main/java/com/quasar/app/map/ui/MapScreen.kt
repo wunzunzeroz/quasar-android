@@ -93,9 +93,6 @@ import com.quasar.app.map.components.ViewPolygonSheet
 import com.quasar.app.map.components.ViewPolylineSheet
 import com.quasar.app.map.components.ViewWaypointDetailSheet
 import com.quasar.app.map.models.Circle
-import com.quasar.app.map.models.Distance
-import com.quasar.app.map.models.DistanceUnit
-import com.quasar.app.map.models.Heading
 import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Waypoint
 import com.quasar.app.map.styles.StyleLoader
@@ -103,10 +100,7 @@ import com.quasar.app.map.utils.Utils
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
-import com.quasar.app.map.models.Position
 import com.quasar.app.map.models.SearchPattern
-import com.quasar.app.map.models.Speed
-import com.quasar.app.map.models.SpeedUnit
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -217,20 +211,21 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                     }
                 }
 
+                // TODO - Put these onto UI state
                 var activeWaypoint: Waypoint? by remember { mutableStateOf(null) }
                 var activePolyline: Polyline? by remember { mutableStateOf(null) }
                 var activePolygon: Polygon? by remember { mutableStateOf(null) }
                 var activeCircle: Circle? by remember { mutableStateOf(null) }
+                var activeSearchPattern: SearchPattern? by remember { mutableStateOf(null) }
 
                 val waypoints by viewModel.waypoints.collectAsState()
                 val polylines by viewModel.polylines.collectAsState()
                 val polygons by viewModel.polygons.collectAsState()
                 val circles by viewModel.circles.collectAsState()
+                val searchPatterns by viewModel.searchPatterns.collectAsState()
 
                 val coroutineScope = rememberCoroutineScope()
 
-                var activeSearchPattern: SearchPattern? by remember { mutableStateOf(null) }
-                val searchPatterns = remember { mutableStateListOf<SearchPattern>() }
 
                 if (uiState.bottomSheetVisible) {
                     ModalBottomSheet(onDismissRequest = {
@@ -359,9 +354,11 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
 
                             BottomSheetContentType.AddCreepingLineSearch -> AddCreepingLineSearchPatternSheet(
                                 datum = longTappedLocation,
-                                onCreatePattern = {
-                                    searchPatterns.add(it)
-                                    viewModel.setBottomSheetVisible(false)
+                                onCreatePattern = { pattern ->
+                                    coroutineScope.launch {
+                                        viewModel.saveSearchPattern(pattern)
+                                        viewModel.setBottomSheetVisible(false)
+                                    }
                                 }
                             )
 
@@ -534,14 +531,6 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             viewModel.setBottomSheetVisible(true)
                         })
 
-                        val testSearch = SearchPattern.CreateCreepingLineSearch(
-                            Position(-36.8374, 174.8203),
-                            Heading(45),
-                            Speed(10.0, SpeedUnit.Kts),
-                            sweepWidth = Distance(100.0, DistanceUnit.Metres),
-                            legCount = 15,
-                            legDistance = Distance(1000.0, DistanceUnit.Metres)
-                        )
                         MapSearchPatterns(searchPatterns, onPatternClicked = {
                             activeSearchPattern = it
                             viewModel.setBottomSheetContentType(BottomSheetContentType.ViewSearchPatternDetail)

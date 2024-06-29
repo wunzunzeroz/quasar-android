@@ -9,6 +9,8 @@ import com.quasar.app.map.data.PolygonsRepository
 import com.quasar.app.map.data.PolygonsRepositoryImpl
 import com.quasar.app.map.data.PolylinesRepository
 import com.quasar.app.map.data.PolylinesRepositoryImpl
+import com.quasar.app.map.data.SearchPatternsRepository
+import com.quasar.app.map.data.SearchPatternsRepositoryImpl
 import com.quasar.app.map.data.SketchRepository
 import com.quasar.app.map.data.SketchRepositoryImpl
 import com.quasar.app.map.data.WaypointsRepository
@@ -41,6 +43,7 @@ val appModule = module {
     single<CirclesRepository> { CirclesRepositoryImpl(get()) }
     single<PolylinesRepository> { PolylinesRepositoryImpl(get()) }
     single<PolygonsRepository> { PolygonsRepositoryImpl(get()) }
+    single<SearchPatternsRepository> { SearchPatternsRepositoryImpl(get()) }
     single<SketchRepository> { SketchRepositoryImpl() }
 
     // DAO
@@ -48,6 +51,7 @@ val appModule = module {
     single { get<AppDatabase>().polylineDao() }
     single { get<AppDatabase>().polygonDao() }
     single { get<AppDatabase>().circleDao() }
+    single { get<AppDatabase>().searchPatternDao() }
 
     // DB
     single {

@@ -1,11 +1,26 @@
 package com.quasar.app.map.models
 
-class SearchPattern private constructor(val datum: Position, val legs: List<SearchLeg>) {
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import com.quasar.app.map.utils.Utils
+import com.quasar.app.ui.theme.NeonOrange
+
+@Entity(tableName = "search_pattern")
+data class SearchPattern(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val datum: Position,
+    val legs: List<SearchLeg>,
+    val color: String = Utils.convertColorToHexString(NeonOrange)
+) {
     val waypoints: List<Position>
-        get() = legs.map { it.endPoint }
+        get() {
+            val result = mutableListOf(datum)
+            result.addAll(legs.map { it.endPoint })
+            return result
+        }
 
     companion object {
-        fun CreateCreepingLineSearch(
+        fun createCreepingLineSearch(
             startPoint: Position,
             trackDirection: Heading,
             speed: Speed,
@@ -40,7 +55,7 @@ class SearchPattern private constructor(val datum: Position, val legs: List<Sear
                 legStartPoint = endPoint
             }
 
-            return SearchPattern(startPoint, searchLegs)
+            return SearchPattern(datum = startPoint, legs = searchLegs)
         }
 
         private fun isExtensionLeg(index: Int): Boolean {

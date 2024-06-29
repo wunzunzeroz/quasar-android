@@ -6,12 +6,14 @@ import com.mapbox.geojson.Point
 import com.quasar.app.map.data.CirclesRepository
 import com.quasar.app.map.data.PolygonsRepository
 import com.quasar.app.map.data.PolylinesRepository
+import com.quasar.app.map.data.SearchPatternsRepository
 import com.quasar.app.map.data.SketchRepository
 import com.quasar.app.map.data.WaypointsRepository
 import com.quasar.app.map.models.Circle
 import com.quasar.app.map.models.CreateWaypointInput
 import com.quasar.app.map.models.Polygon
 import com.quasar.app.map.models.Polyline
+import com.quasar.app.map.models.SearchPattern
 import com.quasar.app.map.models.Waypoint
 import com.quasar.app.map.styles.MapStyle
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,7 +29,7 @@ class MapViewModel(
     private val circlesRepository: CirclesRepository,
     private val polylinesRepository: PolylinesRepository,
     private val polygonsRepository: PolygonsRepository,
-    private val sketchRepository: SketchRepository
+    private val searchPatternsRepository: SearchPatternsRepository
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
@@ -58,6 +60,12 @@ class MapViewModel(
 
     val circles: StateFlow<List<Circle>> =
         circlesRepository.getAll().map { it }.stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = listOf()
+        )
+    val searchPatterns: StateFlow<List<SearchPattern>> =
+        searchPatternsRepository.getAll().map { it }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
             initialValue = listOf()
@@ -165,5 +173,17 @@ class MapViewModel(
 
     suspend fun deleteCircle(circle: Circle) {
         circlesRepository.delete(circle)
+    }
+
+    suspend fun saveSearchPattern(searchPattern: SearchPattern) {
+        searchPatternsRepository.insert(searchPattern)
+    }
+
+    suspend fun updateSearchPattern(searchPattern: SearchPattern) {
+        searchPatternsRepository.update(searchPattern)
+    }
+
+    suspend fun deleteSearchPattern(searchPattern: SearchPattern) {
+        searchPatternsRepository.delete(searchPattern)
     }
 }

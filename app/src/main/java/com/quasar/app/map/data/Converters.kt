@@ -4,7 +4,10 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.core.graphics.toColorInt
 import androidx.room.TypeConverter
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.quasar.app.map.models.Position
+import com.quasar.app.map.models.SearchLeg
 
 class Converters {
     @TypeConverter
@@ -29,8 +32,29 @@ class Converters {
 
     @TypeConverter
     fun stringListToPositionList(str: String): List<Position> {
-       val positions = str.split("|").map { stringToPosition(it) }
+        val positions = str.split("|").map { stringToPosition(it) }
 
         return positions
+    }
+
+    @TypeConverter
+    fun fromSearchLegs(legs: List<SearchLeg>): String {
+        return Gson().toJson(legs)
+    }
+
+    @TypeConverter
+    fun toSearchLegs(legsString: String): List<SearchLeg> {
+        val listType = object : TypeToken<List<SearchLeg>>() {}.type
+        return Gson().fromJson(legsString, listType)
+    }
+
+    @TypeConverter
+    fun fromSearchLeg(leg: SearchLeg): String {
+        return leg.toJson()
+    }
+
+    @TypeConverter
+    fun toSearchLeg(json: String): SearchLeg {
+        return SearchLeg.fromJson(json)
     }
 }
