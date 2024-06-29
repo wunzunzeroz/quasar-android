@@ -88,12 +88,11 @@ import com.quasar.app.map.components.AddPolylineSheet
 import com.quasar.app.map.components.GoToLocationSheet
 import com.quasar.app.map.components.SelectMapStyleSheet
 import com.quasar.app.map.components.ViewCircleSheet
-import com.quasar.app.map.components.ViewCreepingLineSearchDetailSheet
+import com.quasar.app.map.components.ViewSearchPatternDetailSheet
 import com.quasar.app.map.components.ViewPolygonSheet
 import com.quasar.app.map.components.ViewPolylineSheet
 import com.quasar.app.map.components.ViewWaypointDetailSheet
 import com.quasar.app.map.models.Circle
-import com.quasar.app.map.models.CreepingLineSearchPattern
 import com.quasar.app.map.models.Distance
 import com.quasar.app.map.models.DistanceUnit
 import com.quasar.app.map.models.Heading
@@ -105,6 +104,7 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
 import com.quasar.app.map.models.Position
+import com.quasar.app.map.models.SearchPattern
 import com.quasar.app.map.models.Speed
 import com.quasar.app.map.models.SpeedUnit
 
@@ -229,8 +229,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
 
                 val coroutineScope = rememberCoroutineScope()
 
-                var activeCreepingLine: CreepingLineSearchPattern? by remember { mutableStateOf(null) }
-                val creepingLines = remember { mutableStateListOf<CreepingLineSearchPattern>() }
+                var activeSearchPattern: SearchPattern? by remember { mutableStateOf(null) }
+                val searchPatterns = remember { mutableStateListOf<SearchPattern>() }
 
                 if (uiState.bottomSheetVisible) {
                     ModalBottomSheet(onDismissRequest = {
@@ -360,13 +360,13 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             BottomSheetContentType.AddCreepingLineSearch -> AddCreepingLineSearchPatternSheet(
                                 datum = longTappedLocation,
                                 onCreatePattern = {
-                                    creepingLines.add(it)
+                                    searchPatterns.add(it)
                                     viewModel.setBottomSheetVisible(false)
                                 }
                             )
 
-                            BottomSheetContentType.ViewCreepingLineSearchDetail -> activeCreepingLine?.let { search ->
-                                ViewCreepingLineSearchDetailSheet(
+                            BottomSheetContentType.ViewSearchPatternDetail -> activeSearchPattern?.let { search ->
+                                ViewSearchPatternDetailSheet(
                                     search = search,
                                 )
                             }
@@ -534,7 +534,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             viewModel.setBottomSheetVisible(true)
                         })
 
-                        val testSearch = CreepingLineSearchPattern(
+                        val testSearch = SearchPattern.CreateCreepingLineSearch(
                             Position(-36.8374, 174.8203),
                             Heading(45),
                             Speed(10.0, SpeedUnit.Kts),
@@ -542,9 +542,9 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             legCount = 15,
                             legDistance = Distance(1000.0, DistanceUnit.Metres)
                         )
-                        MapCreepingLineSearchPatterns(creepingLines, onPatternClicked = {
-                            activeCreepingLine = it
-                            viewModel.setBottomSheetContentType(BottomSheetContentType.ViewCreepingLineSearchDetail)
+                        MapSearchPatterns(searchPatterns, onPatternClicked = {
+                            activeSearchPattern = it
+                            viewModel.setBottomSheetContentType(BottomSheetContentType.ViewSearchPatternDetail)
                             viewModel.setBottomSheetVisible(true)
                         })
 

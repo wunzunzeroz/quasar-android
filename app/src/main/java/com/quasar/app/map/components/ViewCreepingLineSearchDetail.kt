@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Divider
@@ -20,18 +19,18 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.quasar.app.map.models.CreepingLineSearchPattern
 import com.quasar.app.map.models.Distance
 import com.quasar.app.map.models.DistanceUnit
 import com.quasar.app.map.models.Heading
 import com.quasar.app.map.models.Position
 import com.quasar.app.map.models.SearchLeg
+import com.quasar.app.map.models.SearchPattern
 import com.quasar.app.map.models.Speed
 import com.quasar.app.map.models.SpeedUnit
 
 @Composable
-fun ViewCreepingLineSearchDetailSheet(
-    search: CreepingLineSearchPattern,
+fun ViewSearchPatternDetailSheet(
+    search: SearchPattern,
     modifier: Modifier = Modifier
 ) {
     val legs = search.legs
@@ -68,8 +67,8 @@ fun SearchLegRow(leg: SearchLeg, rowNumber: Int, modifier: Modifier = Modifier) 
     }
 }
 
-val searchPattern = CreepingLineSearchPattern(
-    datum = Position(0.0, 0.0),
+val searchPattern = SearchPattern.CreateCreepingLineSearch(
+    startPoint = Position(0.0, 0.0),
     trackDirection = Heading(0),
     speed = Speed(10.0, SpeedUnit.Kts),
     legCount = 8,
@@ -80,5 +79,5 @@ val searchPattern = CreepingLineSearchPattern(
 @Composable
 @Preview(showSystemUi = true)
 private fun Preview() {
-    ViewCreepingLineSearchDetailSheet(search = searchPattern)
+    ViewSearchPatternDetailSheet(search = searchPattern)
 }

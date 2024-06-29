@@ -18,5 +18,5 @@ enum class BottomSheetContentType {
 
     AddCreepingLineSearch,
 
-    ViewCreepingLineSearchDetail,
+    ViewSearchPatternDetail,
 }

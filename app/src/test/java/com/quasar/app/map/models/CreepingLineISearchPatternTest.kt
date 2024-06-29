@@ -3,7 +3,7 @@ package com.quasar.app.map.models
 import org.junit.Test
 import org.junit.Assert.assertTrue
 
-class CreepingLineSearchPatternTest {
+class CreepingLineISearchPatternTest {
 
     @Test
     fun getLegs() {

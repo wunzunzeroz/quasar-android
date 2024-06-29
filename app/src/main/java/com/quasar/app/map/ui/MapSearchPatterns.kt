@@ -8,14 +8,14 @@ import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGr
 import com.mapbox.maps.extension.compose.annotation.generated.PolylineAnnotationGroup
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.PolylineAnnotationOptions
-import com.quasar.app.map.models.CreepingLineSearchPattern
 import com.quasar.app.map.models.Position
+import com.quasar.app.map.models.SearchPattern
 
 @OptIn(MapboxExperimental::class)
 @Composable
-fun MapCreepingLineSearchPatterns(
-    searchPatterns: List<CreepingLineSearchPattern>,
-    onPatternClicked: (CreepingLineSearchPattern) -> Unit
+fun MapSearchPatterns(
+    searchPatterns: List<SearchPattern>,
+    onPatternClicked: (SearchPattern) -> Unit
 ) {
     val allPoints = searchPatterns.map { it.waypoints.map { pos -> pos.toPoint() } }.flatten()
 
