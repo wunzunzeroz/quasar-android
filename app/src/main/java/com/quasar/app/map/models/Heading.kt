@@ -19,7 +19,7 @@ class Heading(value: Int, val type: HeadingType = HeadingType.True) {
         this.value = value
     }
 
-    fun subtract(degrees: Int): Heading {
+    operator fun minus(degrees: Int): Heading {
         val newValue = value - degrees
 
         return if (newValue < 0) {
@@ -29,7 +29,7 @@ class Heading(value: Int, val type: HeadingType = HeadingType.True) {
         }
     }
 
-    fun add(degrees: Int): Heading {
+    operator fun plus(degrees: Int): Heading {
         val newValue = value + degrees
 
         return if (newValue > 360) {

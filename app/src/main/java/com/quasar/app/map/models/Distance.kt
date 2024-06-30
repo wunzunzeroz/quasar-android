@@ -27,7 +27,7 @@ data class Distance(val value: Double, val unit: DistanceUnit) {
      * @param[speed] The speed at which to cover distance
      * @return Time in seconds to cover distance at given speed
      */
-    fun timeToCover(speed: Speed): Int {
+    fun timeToCoverAt(speed: Speed): Int {
         return when (unit) {
             DistanceUnit.Metres -> (value / speed.toMetresPerSecond()).toInt()
             DistanceUnit.Kilometres -> ((value * 1000) / speed.toMetresPerSecond()).toInt()

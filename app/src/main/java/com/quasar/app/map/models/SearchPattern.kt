@@ -28,7 +28,7 @@ data class SearchPattern(
             legCount: Int,
             legDistance: Distance
         ): SearchPattern {
-            var legHeading = trackDirection.subtract(90)
+            var legHeading = trackDirection - 90
             var legStartPoint = startPoint
 
             val searchLegs = mutableListOf<SearchLeg>()
@@ -44,18 +44,57 @@ data class SearchPattern(
                 }
 
                 val endPoint = legStartPoint.move(legHeading, distance)
-                val time = distance.timeToCover(speed)
+                val time = distance.timeToCoverAt(speed)
 
                 val leg = SearchLeg(legStartPoint, endPoint, legHeading, speed, distance, time)
                 searchLegs.add(leg)
 
                 val nextHeading =
-                    if (isRightTurningLeg(i)) legHeading.add(90) else legHeading.subtract(90)
+                    if (isRightTurningLeg(i)) legHeading + 90 else legHeading - 90
                 legHeading = nextHeading
                 legStartPoint = endPoint
             }
 
             return SearchPattern(datum = startPoint, legs = searchLegs)
+        }
+
+        fun createSectorSearch(
+            datum: Position,
+            initialLegDirection: Heading,
+            speed: Speed,
+            sweepWidth: Distance,
+            legCount: Int
+        ): SearchPattern {
+            val legDistance = sweepWidth * 3
+            val legTime = legDistance.timeToCoverAt(speed)
+
+            val searchLegs = mutableListOf<SearchLeg>()
+
+            // Counters
+            var legHeading = initialLegDirection
+            var legStartPoint = datum
+
+            for (i in 1..(legCount + 1)) {
+                if (i == 19) break // Finished 2 cycles
+
+                val endPoint = legStartPoint.move(legHeading, legDistance)
+
+                val leg =
+                    SearchLeg(legStartPoint, endPoint, legHeading, speed, legDistance, legTime)
+                searchLegs.add(leg)
+
+                val nextHeading =
+                    if (i == 9) legHeading + 30 else if (isThirdLeg(i)) legHeading else legHeading + 120
+
+                legStartPoint = endPoint
+                legHeading = nextHeading
+            }
+
+            return SearchPattern(datum = datum, legs = searchLegs)
+        }
+
+        private fun isThirdLeg(index: Int): Boolean {
+            return index % 3 == 0
         }
 
         private fun isExtensionLeg(index: Int): Boolean {
