@@ -85,6 +85,7 @@ import com.quasar.app.map.components.BottomBar
 import com.quasar.app.map.components.LocationDetailSheet
 import com.quasar.app.map.components.PermissionRequest
 import com.quasar.app.map.components.AddPolylineSheet
+import com.quasar.app.map.components.AddSectorSearchSheet
 import com.quasar.app.map.components.GoToLocationSheet
 import com.quasar.app.map.components.SelectMapStyleSheet
 import com.quasar.app.map.components.ViewCircleSheet
@@ -292,7 +293,11 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 viewModel.setBottomSheetContentType(BottomSheetContentType.AddCircleAnnotation)
                             }, onAddCreepingLineSearch = {
                                 viewModel.setBottomSheetContentType(BottomSheetContentType.AddCreepingLineSearch)
-                            })
+                            },
+                                onAddSectorSearch = {
+                                    viewModel.setBottomSheetContentType(BottomSheetContentType.AddSectorSearch)
+                                }
+                            )
 
                             BottomSheetContentType.AddCircleAnnotation -> AddCircleSheet(
                                 longTappedLocation,
@@ -367,6 +372,17 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     search = search,
                                 )
                             }
+
+                            BottomSheetContentType.AddSectorSearch -> AddSectorSearchSheet(
+                                datum = longTappedLocation,
+                                onCreatePattern = { pattern ->
+                                    coroutineScope.launch {
+                                        viewModel.saveSearchPattern(pattern)
+                                        viewModel.setBottomSheetVisible(false)
+                                    }
+
+                                }
+                            )
                         }
                     }
                 }

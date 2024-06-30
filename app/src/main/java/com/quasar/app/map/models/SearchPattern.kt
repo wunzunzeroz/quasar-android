@@ -74,7 +74,7 @@ data class SearchPattern(
             var legHeading = initialLegDirection
             var legStartPoint = datum
 
-            for (i in 1..(legCount + 1)) {
+            for (i in 1..(legCount)) {
                 if (i == 19) break // Finished 2 cycles
 
                 val endPoint = legStartPoint.move(legHeading, legDistance)

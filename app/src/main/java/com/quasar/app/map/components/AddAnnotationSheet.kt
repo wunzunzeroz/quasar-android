@@ -45,6 +45,7 @@ fun AddAnnotationSheet(
     onAddPolygon: () -> Unit,
     onAddCircle: () -> Unit,
     onAddCreepingLineSearch: () -> Unit,
+    onAddSectorSearch: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -69,6 +70,9 @@ fun AddAnnotationSheet(
         OutlinedButton(onClick = onAddCreepingLineSearch, modifier = Modifier.fillMaxWidth()) {
             Text("Add Creeping Line Search")
         }
+        OutlinedButton(onClick = onAddSectorSearch, modifier = Modifier.fillMaxWidth()) {
+            Text("Add Sector Search")
+        }
 
 
         Spacer(modifier = Modifier.height(8.dp))
@@ -79,5 +83,5 @@ fun AddAnnotationSheet(
 @Preview(showSystemUi = true)
 @Composable
 fun AddAnnotationSheetPreview() {
-    AddAnnotationSheet(onAddPolyline = {}, onAddPolygon = {}, onAddCircle = {}, {})
+    AddAnnotationSheet(onAddPolyline = {}, onAddPolygon = {}, onAddCircle = {}, {}, {})
 }
