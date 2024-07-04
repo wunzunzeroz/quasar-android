@@ -5,6 +5,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import com.mapbox.geojson.Point
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGroup
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
@@ -17,17 +18,17 @@ import com.quasar.app.map.models.WaypointMarkerType
 @Composable
 fun MapLastLocations(lastLocations: List<ChannelMemberLocation>) {
     val waypointAnnotations = lastLocations.map {
-        PointAnnotationOptions().withPoint(it.position.toPoint())
+        PointAnnotationOptions().withPoint(Point.fromLngLat(it.position.longitude, it.position.latitude))
             .withIconImage(getMarkerBitmap(LocalContext.current, WaypointMarkerType.Person))
     }
 
     val circleAnnotations = lastLocations.map {
-        CircleAnnotationOptions().withPoint(it.position.toPoint())
+        CircleAnnotationOptions().withPoint(Point.fromLngLat(it.position.longitude, it.position.latitude))
             .withCircleColor(Color.Magenta.toArgb()).withCircleRadius(10.0).withCircleOpacity(0.7)
     }
 
     CircleAnnotationGroup(annotations = circleAnnotations, onClick = {
-        val cml = lastLocations.first { ll -> ll.position.toPoint() == it.point }
+        val cml = lastLocations.first { ll -> Point.fromLngLat(ll.position.longitude, ll.position.latitude) == it.point }
 
         Log.d("MapScreen", "Tapped ${cml.name}")
 

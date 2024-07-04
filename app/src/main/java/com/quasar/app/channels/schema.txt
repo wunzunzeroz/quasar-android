@@ -7,17 +7,18 @@ Key:
 
 - users[]:
     - user{}:
-        - id
+        - *id
         - name{}:
             - first
             - last
         - email
-        - locations[]:
-            - location{}:
-                - timestamp
-                - latitude
-                - longitude
+        - channels[]
 
+- userLocations[]:
+    - userLocation{}:
+        - *userId
+        - name
+        - location
 
 - channels[]:
     - channel{}:

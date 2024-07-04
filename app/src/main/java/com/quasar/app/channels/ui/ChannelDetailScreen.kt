@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.quasar.app.channels.models.Channel
 import com.quasar.app.map.components.BottomNav
@@ -41,11 +42,12 @@ fun ChannelDetailScreen(
     channelId: String,
     channelViewModel: ChannelsViewModel = get(),
 ) {
-    var channel by remember { mutableStateOf<Channel?>(null) }
+    val channel by channelViewModel.getChannel(channelId).collectAsStateWithLifecycle(initialValue = null)
+//    var channel by remember { mutableStateOf<Channel?>(null) }
 
-    LaunchedEffect(channelId) {
-        channel = channelViewModel.getChannel(channelId)
-    }
+//    LaunchedEffect(channelId) {
+//        channel = channelViewModel.getChannel(channelId)
+//    }
 
     Scaffold(topBar = {
         TopAppBar(title = { Text("Channel Details") }, navigationIcon = {

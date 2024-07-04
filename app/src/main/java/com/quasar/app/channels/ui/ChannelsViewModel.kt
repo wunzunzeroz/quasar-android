@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.quasar.app.channels.data.ChannelRepository
 import com.quasar.app.channels.models.Channel
 import com.quasar.app.channels.models.CreateChannelInput
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 
@@ -44,7 +45,7 @@ class ChannelsViewModel(private val channelRepository: ChannelRepository) : View
         channelRepository.joinChannel(channelId)
     }
 
-    suspend fun getChannel(channelId: String): Channel? {
+     fun getChannel(channelId: String): Flow<Channel?> {
         return channelRepository.getChannel(channelId)
     }
 }
