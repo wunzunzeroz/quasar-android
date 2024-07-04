@@ -9,44 +9,28 @@ import com.google.firebase.firestore.toObject
 import com.google.firebase.firestore.toObjects
 import com.google.firebase.ktx.Firebase
 import com.quasar.app.channels.data.User
-import com.quasar.app.channels.models.FirebaseChannelMember
 import com.quasar.app.channels.models.UserDetails
 import com.quasar.app.map.models.Position
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.mapNotNull
-import kotlinx.coroutines.tasks.await
-import java.time.Instant
 
 interface LocationRepository {
-    val channelMemberLocations: Flow<List<ChannelMemberLocation>>
+    fun getUserLocations(channels: Flow<List<String>>): Flow<List<UserLocation>>
     suspend fun updateUserLocation(location: Position)
 }
 
 class LocationRepositoryImpl : LocationRepository {
     private val db = Firebase.firestore
-    private val userCollection = "users"
-    private val channelCollection = "channels"
-    private val channelMemberCollection = "members"
-
-    override val channelMemberLocations: Flow<List<ChannelMemberLocation>>
-        get() = getUserLocations(getUserDetails().userId)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private fun getUserLocations(userId: String): Flow<List<ChannelMemberLocation>> {
-        return getJoinedChannels(userId).flatMapLatest { userChannels ->
-            db.collection("userLocations").whereIn("channelId", userChannels).snapshots()
-                .mapNotNull { it.toObjects<ChannelMemberLocation>() }
+    override fun getUserLocations(channels: Flow<List<String>>): Flow<List<UserLocation>> {
+        return channels.flatMapLatest { chnls ->
+            db.collection("userLocations").whereIn("channelId", chnls).snapshots()
+                .mapNotNull { it.toObjects<UserLocation>() }
         }
     }
-
-    private fun getJoinedChannels(userId: String): Flow<List<String>> =
-        db.collection("users").document(userId).snapshots()
-            .mapNotNull { it.toObject<User>()?.channels ?: emptyList() }
 
     override suspend fun updateUserLocation(location: Position) {
         try {
@@ -70,16 +54,9 @@ class LocationRepositoryImpl : LocationRepository {
             Log.e("LocationRepository", "Error updating user location: ${e.message}")
         }
     }
-
-    private fun getUserDetails(): UserDetails {
-        val user = FirebaseAuth.getInstance().currentUser
-            ?: throw IllegalStateException("User is not authenticated")
-
-        return UserDetails(user.uid, user.email.toString(), user.displayName.toString())
-    }
 }
 
-data class ChannelMemberLocation(
+data class UserLocation(
     val name: String = "",
     val channelName: String = "",
     val timestamp: String = "",

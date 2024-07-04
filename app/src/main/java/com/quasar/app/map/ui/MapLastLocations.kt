@@ -11,12 +11,12 @@ import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGr
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
 import com.mapbox.maps.plugin.annotation.generated.CircleAnnotationOptions
 import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
-import com.quasar.app.map.data.ChannelMemberLocation
+import com.quasar.app.map.data.UserLocation
 import com.quasar.app.map.models.WaypointMarkerType
 
 @OptIn(MapboxExperimental::class)
 @Composable
-fun MapLastLocations(lastLocations: List<ChannelMemberLocation>) {
+fun MapLastLocations(lastLocations: List<UserLocation>) {
     val waypointAnnotations = lastLocations.map {
         PointAnnotationOptions().withPoint(Point.fromLngLat(it.position.longitude, it.position.latitude))
             .withIconImage(getMarkerBitmap(LocalContext.current, WaypointMarkerType.Person))

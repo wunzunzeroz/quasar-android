@@ -18,6 +18,8 @@ import com.quasar.app.map.data.SketchRepository
 import com.quasar.app.map.data.SketchRepositoryImpl
 import com.quasar.app.map.data.WaypointsRepository
 import com.quasar.app.map.data.WaypointsRepositoryImpl
+import com.quasar.app.map.services.UserLocationService
+import com.quasar.app.map.services.UserLocationServiceImpl
 import com.quasar.app.map.ui.MapViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel
@@ -44,6 +46,9 @@ val appModule = module {
     viewModel {
         ChannelsViewModel(get())
     }
+
+    // Services
+    single<UserLocationService> { UserLocationServiceImpl(get(), get()) }
 
     // Repositories
     single<WaypointsRepository> { WaypointsRepositoryImpl(get()) }
