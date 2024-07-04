@@ -21,7 +21,7 @@ class UserLocationServiceImpl(
         val userId = FirebaseAuth.getInstance().currentUser?.uid
             ?: throw Exception("User not logged in") // TODO - Move to a repo
 
-        val userChannels = channelRepository.getUserChannels(userId)
+        val userChannels = channelRepository.getUserChannels(userId) // This is a flow
 
         return locationRepository.getUserLocations(userChannels)
     }

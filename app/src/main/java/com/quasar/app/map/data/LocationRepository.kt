@@ -14,6 +14,7 @@ import com.quasar.app.map.models.Position
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.mapNotNull
 
 interface LocationRepository {
@@ -27,8 +28,12 @@ class LocationRepositoryImpl : LocationRepository {
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getUserLocations(channels: Flow<List<String>>): Flow<List<UserLocation>> {
         return channels.flatMapLatest { chnls ->
-            db.collection("userLocations").whereIn("channelId", chnls).snapshots()
-                .mapNotNull { it.toObjects<UserLocation>() }
+            if (chnls.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                db.collection("userLocations").whereIn("channelId", chnls).snapshots()
+                    .mapNotNull { it.toObjects<UserLocation>() }
+            }
         }
     }
 

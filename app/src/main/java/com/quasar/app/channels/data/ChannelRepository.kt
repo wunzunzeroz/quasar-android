@@ -15,6 +15,7 @@ import com.quasar.app.channels.models.UserDetails
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.tasks.await
@@ -38,15 +39,19 @@ class ChannelRepositoryImpl() : ChannelRepository {
     override val channels: Flow<List<Channel>>
         get() = getChannels(getUserDetails().userId)
 
-     override fun getUserChannels(userId: String): Flow<List<String>> =
+    override fun getUserChannels(userId: String): Flow<List<String>> =
         db.collection("users").document(userId).snapshots()
             .mapNotNull { it.toObject<User>()?.channels ?: emptyList() }
 
     @OptIn(ExperimentalCoroutinesApi::class)
     fun getChannels(userId: String): Flow<List<Channel>> =
         getUserChannels(userId).flatMapLatest { joinedChannels ->
-            db.collection("channels").whereIn(FieldPath.documentId(), joinedChannels).snapshots()
-                .mapNotNull { it.toObjects<Channel>() }
+            if (joinedChannels.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                db.collection("channels").whereIn(FieldPath.documentId(), joinedChannels)
+                    .snapshots().mapNotNull { it.toObjects<Channel>() }
+            }
         }
 
     override fun getChannel(channelId: String): Flow<Channel?> {
@@ -78,14 +83,19 @@ class ChannelRepositoryImpl() : ChannelRepository {
 
     override suspend fun joinChannel(channelId: String) {
         val userDetails = getUserDetails()
-        val firebaseChannelMember = FirebaseChannelMember(userDetails.userId, userDetails.name)
 
-        // TODO - Handle channel doesn't exist
-        val channelRef = db.collection(channelCollection).document(channelId)
+        val userDoc = db.collection("users").document(userDetails.userId)
 
-        channelRef.collection("members").document(userDetails.userId).set(firebaseChannelMember)
-            .await()
-        channelRef.update("memberCount", FieldValue.increment(1)).await()
+        userDoc.update("channels", FieldValue.arrayUnion(channelId)).await()
+//        val firebaseChannelMember = FirebaseChannelMember(userDetails.userId, userDetails.name)
+//
+//
+//        // TODO - Handle channel doesn't exist
+//        val channelRef = db.collection(channelCollection).document(channelId)
+//
+//        channelRef.collection("members").document(userDetails.userId).set(firebaseChannelMember)
+//            .await()
+//        channelRef.update("memberCount", FieldValue.increment(1)).await()
     }
 
     private suspend fun addUserIfNotExists() {
