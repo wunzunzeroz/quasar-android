@@ -1,5 +1,6 @@
 package com.quasar.app.map.data
 
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.GeoPoint
 import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.snapshots
@@ -18,7 +19,7 @@ import java.time.Instant
 interface LocationRepository {
     fun getUserLocations(channels: Flow<List<String>>): Flow<List<UserLocation>>
     suspend fun broadcastUserLocation(
-        userId: String, location: Position, userChannels: Flow<List<String>>
+        userId: FirebaseUser, location: Position, userChannels: Flow<List<String>>
     )
 }
 
@@ -39,26 +40,28 @@ class LocationRepositoryImpl : LocationRepository {
     }
 
     override suspend fun broadcastUserLocation(
-        userId: String, location: Position, userChannels: Flow<List<String>>
+        user: FirebaseUser, location: Position, userChannels: Flow<List<String>>
     ) {
         userChannels.collectLatest { channelIds ->
             val locationUpdate = UserLocation(
-                userId = userId,
+                userId = user.uid,
+                userName = user.displayName.toString(),
                 timestamp = Instant.now().toString(),
                 channelIds = channelIds,
                 position = GeoPoint(
                     location.latLngDecimal.latitude, location.latLngDecimal.longitude
                 )
             )
-            db.collection("userLocations").document(userId).set(locationUpdate).await()
+            db.collection("userLocations").document(user.uid).set(locationUpdate).await()
         }
     }
 }
 
 data class UserLocation(
     val userId: String = "",
+    val userName: String = "",
     val channelIds: List<String> = listOf(),
     val timestamp: String = "",
-    val position: GeoPoint = GeoPoint(0.0, 0.0)
+    val position: GeoPoint = GeoPoint(0.0, 0.0),
 )
 
