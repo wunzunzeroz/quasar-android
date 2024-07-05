@@ -173,7 +173,6 @@ class MapViewModel(
     }
 
     suspend fun broadcastUserLocation(position: Position) {
-//        locationRepository.updateUserLocation(position)
-
+        userLocationService.broadCastUserLocation(position)
     }
 }

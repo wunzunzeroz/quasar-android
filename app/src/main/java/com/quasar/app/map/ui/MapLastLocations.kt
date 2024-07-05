@@ -30,7 +30,7 @@ fun MapLastLocations(lastLocations: List<UserLocation>) {
     CircleAnnotationGroup(annotations = circleAnnotations, onClick = {
         val cml = lastLocations.first { ll -> Point.fromLngLat(ll.position.longitude, ll.position.latitude) == it.point }
 
-        Log.d("MapScreen", "Tapped ${cml.name}")
+        Log.d("MapScreen", "Tapped ${cml.userId}")
 
         true
     })
