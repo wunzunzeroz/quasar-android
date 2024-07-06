@@ -14,16 +14,15 @@ import android.os.IBinder
 import android.util.Log
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationCallback
 import com.google.android.gms.location.LocationRequest
 import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 import com.quasar.app.MainActivity
 import com.quasar.app.R
 import com.quasar.app.map.models.Position
-import com.quasar.app.map.ui.MapViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -33,43 +32,40 @@ import org.koin.android.ext.android.inject
 class LocationForegroundService : Service() {
     private lateinit var fusedLocationClient: FusedLocationProviderClient
     private lateinit var locationCallback: LocationCallback
+
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     override fun onCreate() {
         super.onCreate()
 
-        Log.d("LocationForegroundService", "Service created")
-
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
 
-        val lService: Lazy<UserLocationService> = inject<UserLocationService>()
+        val userLocationService: Lazy<UserLocationService> = inject<UserLocationService>()
 
         locationCallback = object : LocationCallback() {
             override fun onLocationResult(locationResult: LocationResult) {
                 locationResult ?: return
                 for (location in locationResult.locations) {
-                    updateLocation(location, lService.value)
+                    updateLocation(location, userLocationService.value)
                 }
             }
         }
 
         startLocationUpdates()
-        startForeground(1, createNotification())
+        startForeground(
+            1, createNotification()
+        ) // TODO - Error handling, Work out why notification doesn't show
     }
 
     private fun startLocationUpdates() {
-        val locationRequest = LocationRequest.create().apply {
-            interval = 10000 // 10 seconds
-            fastestInterval = 5000 // 5 seconds
-            priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        }
+        val locationRequest =
+            LocationRequest.Builder(1000).setPriority(Priority.PRIORITY_HIGH_ACCURACY)
+                .setMinUpdateDistanceMeters(30f).build()
 
         if (ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_FINE_LOCATION
+                this, Manifest.permission.ACCESS_FINE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
-                this,
-                Manifest.permission.ACCESS_COARSE_LOCATION
+                this, Manifest.permission.ACCESS_COARSE_LOCATION
             ) != PackageManager.PERMISSION_GRANTED
         ) {
             // TODO: Consider calling
@@ -83,8 +79,6 @@ class LocationForegroundService : Service() {
             return
         }
 
-
-        Log.d("LocationForegroundService", "Requesting location updates")
         fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
     }
 
@@ -100,26 +94,17 @@ class LocationForegroundService : Service() {
         val intent = Intent(this, MainActivity::class.java)
         val pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE)
 
-        return NotificationCompat.Builder(this, channelId)
-            .setContentTitle("Location Service")
+        return NotificationCompat.Builder(this, channelId).setContentTitle("Location Service")
             .setContentText("Tracking location in the background")
-            .setSmallIcon(R.mipmap.ic_launcher)
-            .setContentIntent(pendingIntent)
-            .build()
+            .setSmallIcon(R.mipmap.ic_launcher).setContentIntent(pendingIntent).build()
     }
 
     private fun updateLocation(location: Location, lService: UserLocationService) {
-        // Call the ViewModel method here
-        // You can use a shared ViewModel approach or other communication techniques
-        // For example:
-//        val viewModel = ViewModelProvider(this).get(LocationViewModel::class.java)
-//        viewModel.updateLocation(location)
         Log.d(
             "LocationForegroundService",
             "Location updated in foreground. Lat/Lng: ${location.latitude}, ${location.longitude}"
         )
 
-        // TODO - Persist location to viewmodel, firestore etc
         serviceScope.launch {
             lService.broadCastUserLocation(Position(location.latitude, location.longitude))
         }
