@@ -18,6 +18,7 @@ import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Pentagon
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Timeline
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -30,6 +31,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
@@ -91,6 +93,7 @@ import com.quasar.app.map.components.ViewCircleSheet
 import com.quasar.app.map.components.ViewPolygonSheet
 import com.quasar.app.map.components.ViewPolylineSheet
 import com.quasar.app.map.components.ViewWaypointDetailSheet
+import com.quasar.app.map.data.UserLocation
 import com.quasar.app.map.models.Circle
 import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Waypoint
@@ -100,6 +103,8 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
 import com.quasar.app.map.models.Position
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -214,13 +219,13 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 var activePolyline: Polyline? by remember { mutableStateOf(null) }
                 var activePolygon: Polygon? by remember { mutableStateOf(null) }
                 var activeCircle: Circle? by remember { mutableStateOf(null) }
+                var activeUserLocation: UserLocation? by remember { mutableStateOf(null) }
 
                 val waypoints by viewModel.waypoints.collectAsState()
                 val polylines by viewModel.polylines.collectAsState()
                 val polygons by viewModel.polygons.collectAsState()
                 val circles by viewModel.circles.collectAsState()
 
-                // TODO - What is going on here?
                 val lastLocations by viewModel.channelMemberLocations.collectAsStateWithLifecycle(
                     listOf()
                 )
@@ -228,6 +233,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 val coroutineScope = rememberCoroutineScope()
 
 
+                // TODO - Move modal handler to composable
                 if (uiState.bottomSheetVisible) {
                     ModalBottomSheet(onDismissRequest = {
                         viewModel.setBottomSheetVisible(false)
@@ -256,8 +262,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
                                 })
 
-                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(
-                                tappedLocation.value,
+                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(tappedLocation.value,
                                 onCreateWaypoint = {
                                     coroutineScope.launch {
                                         viewModel.saveWaypoint(it)
@@ -304,7 +309,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     }
                                 })
 
-                            BottomSheetContentType.AddPolylineAnnotation -> AddPolylineSheet(points = uiState.polyCandidate,
+                            BottomSheetContentType.AddPolylineAnnotation -> AddPolylineSheet(
+                                points = uiState.polyCandidate,
                                 onSave = { polyline ->
                                     coroutineScope.launch {
                                         viewModel.savePolyline(polyline)
@@ -314,7 +320,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     }
                                 })
 
-                            BottomSheetContentType.AddPolygonAnnotation -> AddPolygonSheet(points = uiState.polyCandidate,
+                            BottomSheetContentType.AddPolygonAnnotation -> AddPolygonSheet(
+                                points = uiState.polyCandidate,
                                 onSave = { polygon ->
                                     coroutineScope.launch {
                                         viewModel.savePolygon(polygon)
@@ -362,6 +369,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 Box(modifier = Modifier.fillMaxSize()) {
                     val hapticFeedback = LocalHapticFeedback.current
 
+                    var showUserDialog by remember { mutableStateOf(false) }
                     var mapRotationEnabled = remember {
                         mutableStateOf(false)
                     }
@@ -372,6 +380,25 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         mutableStateOf(GesturesSettings {
                             rotateEnabled = mapRotationEnabled.value
                         })
+                    }
+
+                    if (showUserDialog) {
+                        activeUserLocation?.let { user ->
+                            AlertDialog(onDismissRequest = { showUserDialog = false },
+                                confirmButton = { /*TODO*/ },
+                                title = { Text(user.userName) },
+                                text = {
+                                    Column {
+                                        Text("Lat/Lng: ${user.position.latitude}/${user.position.longitude}")
+                                        Text("Last updated: ${user.timestamp}") // TODO - Change to "2 days ago" / "15 mins ago" etc
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showUserDialog = false }) {
+                                        Text("Close")
+                                    }
+                                })
+                        }
                     }
 
                     MapboxMap(
@@ -545,7 +572,10 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             viewModel.setBottomSheetContentType(BottomSheetContentType.ViewCircleDetail)
                             viewModel.setBottomSheetVisible(true)
                         })
-                        MapLastLocations(lastLocations)
+                        MapUserLocations(lastLocations, onTapUserLocation = {
+                            activeUserLocation = it
+                            showUserDialog = true
+                        })
                     } // End MapboxMap
 
                     MapUiOverlay(onLayerButtonClick = {

@@ -11,11 +11,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import com.mapbox.geojson.Geometry
 import com.mapbox.geojson.Point
 import com.mapbox.maps.MapboxExperimental
 import com.mapbox.maps.ViewAnnotationAnchor
-import com.mapbox.maps.ViewAnnotationOptions
 import com.mapbox.maps.extension.compose.annotation.ViewAnnotation
 import com.mapbox.maps.extension.compose.annotation.generated.CircleAnnotationGroup
 import com.mapbox.maps.extension.compose.annotation.generated.PointAnnotationGroup
@@ -29,7 +27,7 @@ import com.quasar.app.map.models.WaypointMarkerType
 
 @OptIn(MapboxExperimental::class)
 @Composable
-fun MapLastLocations(lastLocations: List<UserLocation>) {
+fun MapUserLocations(lastLocations: List<UserLocation>, onTapUserLocation: (UserLocation) -> Unit) {
     Log.d("MapLastLocations", "Adding ${lastLocations.count()} user locations to map:")
     lastLocations.forEach {
         Log.d(
@@ -58,14 +56,15 @@ fun MapLastLocations(lastLocations: List<UserLocation>) {
     }
 
     CircleAnnotationGroup(annotations = circleAnnotations, onClick = {
-        val cml = lastLocations.first { ll ->
+        val userLoc = lastLocations.first { ll ->
             Point.fromLngLat(
                 ll.position.longitude,
                 ll.position.latitude
             ) == it.point
         }
 
-        Log.d("MapScreen", "Tapped ${cml.userId}")
+        Log.d("MapScreen", "Tapped ${userLoc.userId}")
+        onTapUserLocation(userLoc)
 
         true
     })
@@ -81,7 +80,7 @@ fun MapLastLocations(lastLocations: List<UserLocation>) {
         }
         ) {
             Box(modifier = Modifier.padding(top = 8.dp)) {
-                Text(loc.userName, style = MaterialTheme.typography.labelSmall)
+                Text(loc.userName, style = MaterialTheme.typography.labelSmall, color = Color.Black)
             }
         }
     }
