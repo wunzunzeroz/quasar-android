@@ -1,5 +1,6 @@
 package com.quasar.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,6 +18,7 @@ import com.google.firebase.analytics.FirebaseAnalytics
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.analytics.logEvent
 import com.google.firebase.ktx.Firebase
+import com.quasar.app.map.services.LocationForegroundService
 import com.quasar.app.ui.theme.QUASARTheme
 
 
@@ -27,11 +29,15 @@ class MainActivity : ComponentActivity() {
 
         firebaseAnalytics = Firebase.analytics
 
-        val signInLauncher = registerForActivityResult(
-            FirebaseAuthUIActivityResultContract()
-        ) { result ->
-            onSignInResult(result)
-        }
+        val intent = Intent(this, LocationForegroundService::class.java)
+        startForegroundService(intent)
+
+
+//        val signInLauncher = registerForActivityResult(
+//            FirebaseAuthUIActivityResultContract()
+//        ) { result ->
+//            onSignInResult(result)
+//        }
 
         enableEdgeToEdge()
         setContent {

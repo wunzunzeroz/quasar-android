@@ -483,9 +483,9 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                                 val position = Position.fromPoint(point)
 
                                                 viewModel.setUserLocation(point)
-                                                coroutineScope.launch {
-                                                    viewModel.broadcastUserLocation(position)
-                                                }
+//                                                coroutineScope.launch {
+//                                                    viewModel.broadcastUserLocation(position)
+//                                                }
                                             }
 
                                         }
