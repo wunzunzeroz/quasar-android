@@ -1,4 +1,4 @@
-package com.quasar.app.channels.data
+package com.quasar.app.data
 
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldPath
@@ -8,7 +8,7 @@ import com.google.firebase.firestore.snapshots
 import com.google.firebase.firestore.toObject
 import com.google.firebase.firestore.toObjects
 import com.google.firebase.ktx.Firebase
-import com.quasar.app.channels.models.Channel
+import com.quasar.app.domain.models.Channel
 import com.quasar.app.channels.models.FirebaseChannelMember
 import com.quasar.app.channels.models.CreateChannelInput
 import com.quasar.app.channels.models.UserDetails

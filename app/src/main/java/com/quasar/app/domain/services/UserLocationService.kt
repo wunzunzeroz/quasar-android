@@ -1,15 +1,13 @@
-package com.quasar.app.map.services
+package com.quasar.app.domain.services
 
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
-import com.quasar.app.channels.data.ChannelRepository
-import com.quasar.app.map.data.LocationRepository
-import com.quasar.app.map.data.UserLocation
+import com.quasar.app.data.ChannelRepository
+import com.quasar.app.data.LocationRepository
+import com.quasar.app.domain.models.UserLocation
 import com.quasar.app.map.models.Position
 import kotlinx.coroutines.flow.Flow
-import java.time.Duration
-import java.time.Instant
 
 interface UserLocationService {
     val userLocations: Flow<List<UserLocation>>

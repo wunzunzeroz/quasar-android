@@ -22,6 +22,7 @@ import com.google.android.gms.location.LocationServices
 import com.google.android.gms.location.Priority
 import com.quasar.app.MainActivity
 import com.quasar.app.R
+import com.quasar.app.domain.services.UserLocationService
 import com.quasar.app.map.models.Position
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers

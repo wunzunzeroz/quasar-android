@@ -1,4 +1,4 @@
-package com.quasar.app.map.data
+package com.quasar.app.data
 
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.firestore.GeoPoint
@@ -6,6 +6,7 @@ import com.google.firebase.firestore.ktx.firestore
 import com.google.firebase.firestore.snapshots
 import com.google.firebase.firestore.toObjects
 import com.google.firebase.ktx.Firebase
+import com.quasar.app.domain.models.UserLocation
 import com.quasar.app.map.models.Position
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -56,12 +57,4 @@ class LocationRepositoryImpl : LocationRepository {
         }
     }
 }
-
-data class UserLocation(
-    val userId: String = "",
-    val userName: String = "",
-    val channelIds: List<String> = listOf(),
-    val timestamp: String = "",
-    val position: GeoPoint = GeoPoint(0.0, 0.0),
-)
 

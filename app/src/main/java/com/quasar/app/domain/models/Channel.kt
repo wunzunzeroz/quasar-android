@@ -1,4 +1,6 @@
-package com.quasar.app.channels.models
+package com.quasar.app.domain.models
+
+import com.quasar.app.channels.models.FirebaseChannelMember
 
 data class Channel(
     val id: String = "",

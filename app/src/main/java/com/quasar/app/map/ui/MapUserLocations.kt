@@ -22,7 +22,7 @@ import com.mapbox.maps.plugin.annotation.generated.PointAnnotationOptions
 import com.mapbox.maps.viewannotation.annotationAnchor
 import com.mapbox.maps.viewannotation.geometry
 import com.mapbox.maps.viewannotation.viewAnnotationOptions
-import com.quasar.app.map.data.UserLocation
+import com.quasar.app.domain.models.UserLocation
 import com.quasar.app.map.models.WaypointMarkerType
 
 @OptIn(MapboxExperimental::class)

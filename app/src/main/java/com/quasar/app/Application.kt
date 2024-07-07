@@ -2,14 +2,14 @@ package com.quasar.app
 
 import android.app.Application
 import androidx.room.Room
-import com.quasar.app.channels.data.ChannelRepository
-import com.quasar.app.channels.data.ChannelRepositoryImpl
+import com.quasar.app.data.ChannelRepository
+import com.quasar.app.data.ChannelRepositoryImpl
 import com.quasar.app.channels.ui.ChannelsViewModel
 import com.quasar.app.map.data.AppDatabase
 import com.quasar.app.map.data.CirclesRepository
 import com.quasar.app.map.data.CirclesRepositoryImpl
-import com.quasar.app.map.data.LocationRepository
-import com.quasar.app.map.data.LocationRepositoryImpl
+import com.quasar.app.data.LocationRepository
+import com.quasar.app.data.LocationRepositoryImpl
 import com.quasar.app.map.data.PolygonsRepository
 import com.quasar.app.map.data.PolygonsRepositoryImpl
 import com.quasar.app.map.data.PolylinesRepository
@@ -18,8 +18,8 @@ import com.quasar.app.map.data.SketchRepository
 import com.quasar.app.map.data.SketchRepositoryImpl
 import com.quasar.app.map.data.WaypointsRepository
 import com.quasar.app.map.data.WaypointsRepositoryImpl
-import com.quasar.app.map.services.UserLocationService
-import com.quasar.app.map.services.UserLocationServiceImpl
+import com.quasar.app.domain.services.UserLocationService
+import com.quasar.app.domain.services.UserLocationServiceImpl
 import com.quasar.app.map.ui.MapViewModel
 import org.koin.android.ext.koin.androidContext
 import org.koin.androidx.viewmodel.dsl.viewModel

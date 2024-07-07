@@ -93,7 +93,7 @@ import com.quasar.app.map.components.ViewCircleSheet
 import com.quasar.app.map.components.ViewPolygonSheet
 import com.quasar.app.map.components.ViewPolylineSheet
 import com.quasar.app.map.components.ViewWaypointDetailSheet
-import com.quasar.app.map.data.UserLocation
+import com.quasar.app.domain.models.UserLocation
 import com.quasar.app.map.models.Circle
 import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Waypoint
@@ -104,8 +104,6 @@ import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
 import com.quasar.app.map.models.Position
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class

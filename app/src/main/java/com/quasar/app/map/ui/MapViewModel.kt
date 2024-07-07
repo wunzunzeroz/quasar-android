@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.mapbox.geojson.Point
 import com.quasar.app.map.data.CirclesRepository
-import com.quasar.app.map.data.LocationRepository
 import com.quasar.app.map.data.PolygonsRepository
 import com.quasar.app.map.data.PolylinesRepository
 import com.quasar.app.map.data.SketchRepository
@@ -14,7 +13,7 @@ import com.quasar.app.map.models.Polygon
 import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Position
 import com.quasar.app.map.models.Waypoint
-import com.quasar.app.map.services.UserLocationService
+import com.quasar.app.domain.services.UserLocationService
 import com.quasar.app.map.styles.MapStyle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted

@@ -1,8 +1,8 @@
 package com.quasar.app.channels.ui
 
 import androidx.lifecycle.ViewModel
-import com.quasar.app.channels.data.ChannelRepository
-import com.quasar.app.channels.models.Channel
+import com.quasar.app.data.ChannelRepository
+import com.quasar.app.domain.models.Channel
 import com.quasar.app.channels.models.CreateChannelInput
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
