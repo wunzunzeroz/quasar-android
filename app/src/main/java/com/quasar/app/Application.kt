@@ -10,6 +10,8 @@ import com.quasar.app.map.data.CirclesRepository
 import com.quasar.app.map.data.CirclesRepositoryImpl
 import com.quasar.app.data.LocationRepository
 import com.quasar.app.data.LocationRepositoryImpl
+import com.quasar.app.data.UserRepository
+import com.quasar.app.data.UserRepositoryImpl
 import com.quasar.app.map.data.PolygonsRepository
 import com.quasar.app.map.data.PolygonsRepositoryImpl
 import com.quasar.app.map.data.PolylinesRepository
@@ -59,6 +61,7 @@ val appModule = module {
 
     single<ChannelRepository> { ChannelRepositoryImpl() }
     single<LocationRepository> { LocationRepositoryImpl() }
+    single<UserRepository> { UserRepositoryImpl() }
 
     // DAO
     single { get<AppDatabase>().waypointDao() }
