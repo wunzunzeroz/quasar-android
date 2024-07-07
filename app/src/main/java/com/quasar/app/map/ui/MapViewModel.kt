@@ -37,7 +37,7 @@ class MapViewModel(
     private val _userLocation = MutableStateFlow(Point.fromLngLat(174.858, -36.787))
     val userLocation: StateFlow<Point> = _userLocation.asStateFlow()
 
-    val channelMemberLocations = userLocationService.userLocations
+    val channelMemberLocations = userLocationService.getUserLocations()
 
     val waypoints: StateFlow<List<Waypoint>> =
         waypointsRepository.getAllWaypoints().map { it }.stateIn(
@@ -172,6 +172,6 @@ class MapViewModel(
     }
 
     suspend fun broadcastUserLocation(position: Position) {
-        userLocationService.broadCastUserLocation(position)
+        userLocationService.broadCastCurrentUserLocation(position)
     }
 }

@@ -21,7 +21,7 @@ import kotlinx.coroutines.tasks.await
 import java.util.UUID
 
 interface ChannelRepository {
-    fun getChannelsForUser(userChannels: Flow<List<String>>): Flow<List<Channel?>>
+    fun getChannelsForUser(userChannels: Flow<List<String>>): Flow<List<Channel>>
     fun getChannel(channelId: String): Flow<Channel?>
     suspend fun createChannel(input: CreateChannelInput, user: User): String
     suspend fun addMemberToChannel(channelId: String, user: User)
@@ -32,7 +32,7 @@ class ChannelRepositoryImpl() : ChannelRepository {
     private val collectionName = "channels"
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    override fun getChannelsForUser(userChannels: Flow<List<String>>): Flow<List<Channel?>> {
+    override fun getChannelsForUser(userChannels: Flow<List<String>>): Flow<List<Channel>> {
         return userChannels.flatMapLatest { channelIds ->
             if (channelIds.isEmpty()) {
                 flowOf(emptyList())

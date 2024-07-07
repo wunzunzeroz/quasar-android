@@ -14,7 +14,7 @@ import kotlinx.coroutines.tasks.await
 interface UserRepository {
     fun getUserId(): String
 
-    suspend fun getUser(): User?
+    suspend fun getUser(): User
 
     fun getUserChannels(): Flow<List<String>>
 
@@ -31,8 +31,25 @@ class UserRepositoryImpl : UserRepository {
             ?: throw Exception("Unable to get User ID for current user")
     }
 
-    override suspend fun getUser(): User? {
-        return db.collection(collectionName).document(getUserId()).get().await().toObject<User>()
+    override suspend fun getUser(): User {
+        val firebaseUser =
+            FirebaseAuth.getInstance().currentUser ?: throw Exception("User is not authenticated")
+
+        val userDocRef = db.collection(collectionName).document(getUserId())
+        val userDetails = hashMapOf(
+            "name" to firebaseUser.displayName,
+            "email" to firebaseUser.email
+        )
+
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(userDocRef)
+
+            if (!snapshot.exists()) {
+                transaction.set(userDocRef, userDetails)
+            }
+        }.await()
+
+        return userDocRef.get().await().toObject<User>() ?: throw Exception("Unable to get User")
     }
 
     override fun getUserChannels(): Flow<List<String>> {

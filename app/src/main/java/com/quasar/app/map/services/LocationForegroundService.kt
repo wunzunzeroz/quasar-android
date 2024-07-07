@@ -107,7 +107,7 @@ class LocationForegroundService : Service() {
         )
 
         serviceScope.launch {
-            lService.broadCastUserLocation(Position(location.latitude, location.longitude))
+            lService.broadCastCurrentUserLocation(Position(location.latitude, location.longitude))
         }
     }
 

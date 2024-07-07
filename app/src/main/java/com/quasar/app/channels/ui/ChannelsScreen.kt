@@ -48,7 +48,7 @@ fun ChannelsScreen(navController: NavHostController, channelViewModel: ChannelsV
     val context = LocalContext.current
 
     val uiState by channelViewModel.uiState.collectAsState()
-    val channels by channelViewModel.channels.collectAsStateWithLifecycle(emptyList())
+    val channels by channelViewModel.getChannels().collectAsStateWithLifecycle(emptyList())
 
     Scaffold(topBar = {
         TopAppBar(title = { Text(text = "Channels") }, navigationIcon = {
