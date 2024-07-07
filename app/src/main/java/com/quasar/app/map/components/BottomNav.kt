@@ -52,6 +52,7 @@ fun BottomNav(navHostController: NavHostController) {
                 },
                 label = { Text(item) },
                 selected = selectedItem.intValue == index,
+                alwaysShowLabel = true,
                 onClick = {
                     selectedItem.intValue = index
                     navHostController.navigate(screens[index].name)

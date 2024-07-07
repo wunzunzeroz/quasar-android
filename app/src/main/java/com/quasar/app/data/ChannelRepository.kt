@@ -11,6 +11,7 @@ import com.quasar.app.domain.models.Channel
 import com.quasar.app.domain.models.ChannelMember
 import com.quasar.app.domain.models.User
 import com.quasar.app.channels.models.CreateChannelInput
+import com.quasar.app.domain.services.ChannelIdGenerationService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flatMapLatest
@@ -27,7 +28,8 @@ interface ChannelRepository {
     suspend fun addMemberToChannel(channelId: String, user: User)
 }
 
-class ChannelRepositoryImpl() : ChannelRepository {
+class ChannelRepositoryImpl(private val channelIdGenerationService: ChannelIdGenerationService) :
+    ChannelRepository {
     private val db = Firebase.firestore
     private val collectionName = "channels"
 
@@ -51,7 +53,8 @@ class ChannelRepositoryImpl() : ChannelRepository {
     override suspend fun createChannel(input: CreateChannelInput, user: User): String {
         val channelMember = ChannelMember(userId = user.userId, name = user.name)
 
-        val channelId = UUID.randomUUID().toString() // TODO - Create friendly UUIDs
+//        val channelId = UUID.randomUUID().toString() // TODO - Create friendly UUIDs
+        val channelId = channelIdGenerationService.generateId()
 
         val channel = Channel(
             name = input.name, description = input.description, members = listOf(channelMember)

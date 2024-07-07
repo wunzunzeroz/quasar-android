@@ -12,6 +12,8 @@ import com.quasar.app.data.LocationRepository
 import com.quasar.app.data.LocationRepositoryImpl
 import com.quasar.app.data.UserRepository
 import com.quasar.app.data.UserRepositoryImpl
+import com.quasar.app.domain.services.ChannelIdGenerationService
+import com.quasar.app.domain.services.ChannelIdGenerationServiceImpl
 import com.quasar.app.domain.services.ChannelService
 import com.quasar.app.domain.services.ChannelServiceImpl
 import com.quasar.app.map.data.PolygonsRepository
@@ -54,6 +56,7 @@ val appModule = module {
     // Services
     single<UserLocationService> { UserLocationServiceImpl(get(), get(), get()) }
     single<ChannelService> { ChannelServiceImpl(get(), get()) }
+    single<ChannelIdGenerationService> { ChannelIdGenerationServiceImpl() }
 
     // Repositories
     single<WaypointsRepository> { WaypointsRepositoryImpl(get()) }
@@ -62,7 +65,7 @@ val appModule = module {
     single<PolygonsRepository> { PolygonsRepositoryImpl(get()) }
     single<SketchRepository> { SketchRepositoryImpl() }
 
-    single<ChannelRepository> { ChannelRepositoryImpl() }
+    single<ChannelRepository> { ChannelRepositoryImpl(get()) }
     single<LocationRepository> { LocationRepositoryImpl() }
     single<UserRepository> { UserRepositoryImpl() }
 
