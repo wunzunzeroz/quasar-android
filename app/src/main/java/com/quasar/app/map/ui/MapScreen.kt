@@ -103,6 +103,7 @@ import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
 import com.quasar.app.map.models.Position
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -388,9 +389,12 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                 confirmButton = { /*TODO*/ },
                                 title = { Text(user.userName) },
                                 text = {
+                                    val timeSince =
+                                        Utils.getTimeSinceNow(Instant.parse(user.timestamp))
                                     Column {
-                                        Text("Lat/Lng: ${user.position.latitude}/${user.position.longitude}")
-                                        Text("Last updated: ${user.timestamp}") // TODO - Change to "2 days ago" / "15 mins ago" etc
+                                        Text("Latitude: ${user.position.latitude}")
+                                        Text("Longitude: ${user.position.longitude}")
+                                        Text("Last updated: $timeSince ago")
                                     }
                                 },
                                 dismissButton = {

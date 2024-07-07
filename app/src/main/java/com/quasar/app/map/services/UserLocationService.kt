@@ -21,31 +21,16 @@ class UserLocationServiceImpl(
     private val locationRepository: LocationRepository
 ) : UserLocationService {
     private val loggerTag = "UserLocationService"
-    private var lastUpdated: Instant? = null
-    private var updateThresholdMinutes = 1
 
     override val userLocations: Flow<List<UserLocation>>
         get() = getUserLocationsImpl()
 
     override suspend fun broadCastUserLocation(location: Position) {
-        val currentTime = Instant.now()
-        val isEligibleUpdate = lastUpdated == null || Duration.between(lastUpdated, currentTime)
-            .toMinutes() >= updateThresholdMinutes
-
-        if (!isEligibleUpdate) {
-            Log.d(
-                loggerTag,
-                "Not broadcasting user update, as update threshold has not been reached"
-            )
-            return
-        }
-
         Log.d(
             loggerTag,
             "Broadcasting user position at lat/lng <${location.latLngDecimal.latitude}/${location.latLngDecimal.longitude}>"
         )
 
-        lastUpdated = currentTime
         val user = getUser()
         val userChannels = channelRepository.getUserChannels(user.uid)
 
