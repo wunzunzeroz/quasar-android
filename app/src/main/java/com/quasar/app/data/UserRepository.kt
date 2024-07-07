@@ -37,6 +37,7 @@ class UserRepositoryImpl : UserRepository {
 
         val userDocRef = db.collection(collectionName).document(getUserId())
         val userDetails = hashMapOf(
+            "userId" to firebaseUser.uid,
             "name" to firebaseUser.displayName,
             "email" to firebaseUser.email
         )

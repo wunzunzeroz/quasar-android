@@ -26,6 +26,7 @@ interface LocationRepository {
 
 class LocationRepositoryImpl : LocationRepository {
     private val db = Firebase.firestore
+    private val collectionName = "userLocations"
 
     @OptIn(ExperimentalCoroutinesApi::class)
     override fun getUserLocations(channels: Flow<List<String>>): Flow<List<UserLocation>> {
@@ -33,7 +34,7 @@ class LocationRepositoryImpl : LocationRepository {
             if (channelIds.isEmpty()) {
                 flowOf(emptyList())
             } else {
-                db.collection("userLocations").whereArrayContainsAny("channelIds", channelIds)
+                db.collection(collectionName).whereArrayContainsAny("channelIds", channelIds)
                     .snapshots()
                     .mapNotNull { it.toObjects<UserLocation>() }
             }
@@ -45,7 +46,7 @@ class LocationRepositoryImpl : LocationRepository {
     ) {
         userChannels.collectLatest { channelIds ->
             val locationUpdate = UserLocation(
-                userId = user.id,
+                userId = user.userId,
                 userName = user.name,
                 timestamp = Instant.now().toString(),
                 channelIds = channelIds,
@@ -53,7 +54,8 @@ class LocationRepositoryImpl : LocationRepository {
                     location.latLngDecimal.latitude, location.latLngDecimal.longitude
                 )
             )
-            db.collection("userLocations").document(user.id).set(locationUpdate).await()
+            println("COLLECTION: $collectionName, USER ID: ${user.userId}")
+            db.collection(collectionName).document(user.userId).set(locationUpdate).await()
         }
     }
 }

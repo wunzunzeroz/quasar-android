@@ -121,6 +121,7 @@ fun ChannelsScreen(navController: NavHostController, channelViewModel: ChannelsV
                 LazyColumn {
                     items(channels, key = { it.name }) { channel ->
                         ChannelRow(channel, onChannelSelect = {
+                            println("CHANNEL ID: $channel.id")
                             navController.navigate("${QuasarScreen.ChannelDetailScreen.name}/${channel.id}")
                         })
                     }

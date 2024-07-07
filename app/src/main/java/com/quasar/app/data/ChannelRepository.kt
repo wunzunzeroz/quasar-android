@@ -49,12 +49,12 @@ class ChannelRepositoryImpl() : ChannelRepository {
     }
 
     override suspend fun createChannel(input: CreateChannelInput, user: User): String {
-        val channelMember = ChannelMember(userId = user.id, name = user.name)
+        val channelMember = ChannelMember(userId = user.userId, name = user.name)
 
         val channelId = UUID.randomUUID().toString() // TODO - Create friendly UUIDs
 
         val channel = Channel(
-            channelId, input.name, input.description, members = listOf(channelMember)
+            name = input.name, description = input.description, members = listOf(channelMember)
         )
 
         db.collection(collectionName).document(channelId).set(channel).await()
@@ -63,7 +63,7 @@ class ChannelRepositoryImpl() : ChannelRepository {
     }
 
     override suspend fun addMemberToChannel(channelId: String, user: User) {
-        val channelMember = ChannelMember(userId = user.id, name = user.name)
+        val channelMember = ChannelMember(userId = user.userId, name = user.name)
 
 //        // TODO - Handle channel doesn't exist
         db.collection(collectionName).document(channelId)

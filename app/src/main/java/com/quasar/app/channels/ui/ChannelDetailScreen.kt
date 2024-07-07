@@ -69,6 +69,8 @@ fun ChannelDetailScreen(
         ) {
             channel?.let { channel ->
                 // TODO - Improve UI on this page
+                // - Add Posts
+                // - Add leave channel button
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(channel.name, style = MaterialTheme.typography.headlineLarge)
                 Spacer(modifier = Modifier.height(16.dp))
