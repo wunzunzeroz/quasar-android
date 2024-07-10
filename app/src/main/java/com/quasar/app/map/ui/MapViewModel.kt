@@ -9,10 +9,11 @@ import com.quasar.app.map.data.PolylinesRepository
 import com.quasar.app.map.data.SketchRepository
 import com.quasar.app.map.data.WaypointsRepository
 import com.quasar.app.map.models.Circle
-import com.quasar.app.map.models.CreateWaypointInput
 import com.quasar.app.map.models.Polygon
 import com.quasar.app.map.models.Polyline
+import com.quasar.app.map.models.Position
 import com.quasar.app.map.models.Waypoint
+import com.quasar.app.domain.services.UserLocationService
 import com.quasar.app.map.styles.MapStyle
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -27,13 +28,16 @@ class MapViewModel(
     private val circlesRepository: CirclesRepository,
     private val polylinesRepository: PolylinesRepository,
     private val polygonsRepository: PolygonsRepository,
-    private val sketchRepository: SketchRepository
+    private val sketchRepository: SketchRepository,
+    private val userLocationService: UserLocationService
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(UiState())
     val uiState: StateFlow<UiState> = _uiState.asStateFlow()
 
     private val _userLocation = MutableStateFlow(Point.fromLngLat(174.858, -36.787))
     val userLocation: StateFlow<Point> = _userLocation.asStateFlow()
+
+    val channelMemberLocations = userLocationService.getUserLocations()
 
     val waypoints: StateFlow<List<Waypoint>> =
         waypointsRepository.getAllWaypoints().map { it }.stateIn(
@@ -165,5 +169,9 @@ class MapViewModel(
 
     suspend fun deleteCircle(circle: Circle) {
         circlesRepository.delete(circle)
+    }
+
+    suspend fun broadcastUserLocation(position: Position) {
+        userLocationService.broadCastCurrentUserLocation(position)
     }
 }

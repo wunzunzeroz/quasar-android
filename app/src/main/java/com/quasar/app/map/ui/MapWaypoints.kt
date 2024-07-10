@@ -46,7 +46,7 @@ fun MapWaypoints(
         true
     })
 }
-private fun getMarkerBitmap(context: Context, markerType: WaypointMarkerType): Bitmap {
+fun getMarkerBitmap(context: Context, markerType: WaypointMarkerType): Bitmap {
     val drawableId = getDrawableForWaypointMarker(markerType)
     val drawable = ContextCompat.getDrawable(context, drawableId)
 

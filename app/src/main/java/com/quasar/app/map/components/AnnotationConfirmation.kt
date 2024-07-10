@@ -1,4 +1,4 @@
-package com.quasar.app.map.ui
+package com.quasar.app.map.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement

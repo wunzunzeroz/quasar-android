@@ -1,0 +1,41 @@
+Firestore Schema
+
+Key:
+[] = collection or subcollection
+{} = document
+&user.id = foreign key
+
+- users[]:
+    - user{}:
+        - *id
+        - name{}:
+            - first
+            - last
+        - email
+        - channels[]
+
+- userLocations[]:
+    - userLocation{}:
+        - *userId
+        - name
+        - location
+
+- channels[]:
+    - channel{}:
+        - id
+        - &room.id
+        - name
+        - description
+        - members[]:
+            - &user.id
+        - lastLocations[]:
+
+- rooms[]:
+    - room{}:
+        - id
+        - &channel.id
+        - messages[]:
+            - message{}:
+                - timestamp
+                - &user.id
+                - content

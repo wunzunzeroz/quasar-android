@@ -28,9 +28,13 @@ import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.FirebaseAuthUIActivityResultContract
 import com.firebase.ui.auth.data.model.FirebaseAuthUIAuthenticationResult
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.ktx.firestore
+import com.google.firebase.ktx.Firebase
 import com.quasar.app.QuasarScreen
 import com.quasar.app.R
+import com.quasar.app.channels.models.UserDetails
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @Composable
 fun LandingScreen(
@@ -108,11 +112,30 @@ private fun onSignInResult(
         val email = response?.email
         val providerType = response?.providerType
 
+        val db = Firebase.firestore;
+
+        val user = FirebaseAuth.getInstance().currentUser
+            ?: throw IllegalStateException("User is not authenticated")
+
+        val userDocRef = db.collection("users").document(user.uid)
+
+        val userDetails =
+            UserDetails(user.uid, user.email ?: "", user.displayName ?: "") // TODO - Improve this
+
+        db.runTransaction { transaction ->
+            val snapshot = transaction.get(userDocRef)
+
+            if (!snapshot.exists()) {
+                transaction.set(userDocRef, userDetails)
+            }
+        }.addOnSuccessListener {
+            navController.navigate(QuasarScreen.MapScreen.name)
+        }
+
 //        firebaseAnalytics.logEvent(FirebaseAnalytics.Event.LOGIN) {
 //            param(FirebaseAnalytics.Param.ITEM_NAME, email ?: "Unknown email")
 //            param(FirebaseAnalytics.Param.METHOD, providerType ?: "Unknown provider")
 //        }
-        navController.navigate(QuasarScreen.MapScreen.name)
     } else {
         // Handle sign-in failure
         throw Exception("Error logging in")

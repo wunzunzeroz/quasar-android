@@ -1,9 +1,6 @@
 package com.quasar.app.map.ui
 
 import android.animation.ValueAnimator
-import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -17,12 +14,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Circle
 import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Pentagon
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Timeline
-import androidx.compose.material3.Button
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Divider
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -35,6 +31,7 @@ import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
@@ -54,7 +51,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.firebase.ui.auth.AuthUI
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
@@ -85,26 +82,28 @@ import com.quasar.app.map.components.AddAnnotationSheet
 import com.quasar.app.map.components.AddCircleSheet
 import com.quasar.app.map.components.AddPolygonSheet
 import com.quasar.app.map.components.AddWaypointSheet
-import com.quasar.app.map.components.BottomBar
+import com.quasar.app.map.components.BottomNav
 import com.quasar.app.map.components.LocationDetailSheet
 import com.quasar.app.map.components.PermissionRequest
 import com.quasar.app.map.components.AddPolylineSheet
+import com.quasar.app.map.components.AnnotationConfirmation
 import com.quasar.app.map.components.GoToLocationSheet
 import com.quasar.app.map.components.SelectMapStyleSheet
 import com.quasar.app.map.components.ViewCircleSheet
 import com.quasar.app.map.components.ViewPolygonSheet
 import com.quasar.app.map.components.ViewPolylineSheet
 import com.quasar.app.map.components.ViewWaypointDetailSheet
+import com.quasar.app.domain.models.UserLocation
 import com.quasar.app.map.models.Circle
 import com.quasar.app.map.models.Polyline
 import com.quasar.app.map.models.Waypoint
-import com.quasar.app.map.models.WaypointMarkerType
 import com.quasar.app.map.styles.StyleLoader
 import com.quasar.app.map.utils.Utils
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.get
 import com.quasar.app.map.models.Polygon
-import kotlinx.coroutines.coroutineScope
+import com.quasar.app.map.models.Position
+import java.time.Instant
 
 @OptIn(
     ExperimentalMaterial3Api::class, MapboxExperimental::class, ExperimentalPermissionsApi::class
@@ -198,7 +197,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 )
                 )
             }, bottomBar = {
-                BottomBar()
+                BottomNav(navController)
             }) { contentPadding ->
                 val tappedLocation = remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
                 var longTappedLocation by remember { mutableStateOf(Point.fromLngLat(0.0, 0.0)) }
@@ -219,15 +218,21 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 var activePolyline: Polyline? by remember { mutableStateOf(null) }
                 var activePolygon: Polygon? by remember { mutableStateOf(null) }
                 var activeCircle: Circle? by remember { mutableStateOf(null) }
+                var activeUserLocation: UserLocation? by remember { mutableStateOf(null) }
 
                 val waypoints by viewModel.waypoints.collectAsState()
                 val polylines by viewModel.polylines.collectAsState()
                 val polygons by viewModel.polygons.collectAsState()
                 val circles by viewModel.circles.collectAsState()
 
+                val lastLocations by viewModel.channelMemberLocations.collectAsStateWithLifecycle(
+                    listOf()
+                )
+
                 val coroutineScope = rememberCoroutineScope()
 
 
+                // TODO - Move modal handler to composable
                 if (uiState.bottomSheetVisible) {
                     ModalBottomSheet(onDismissRequest = {
                         viewModel.setBottomSheetVisible(false)
@@ -256,8 +261,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     viewModel.setBottomSheetContentType(BottomSheetContentType.AddWaypoint)
                                 })
 
-                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(
-                                tappedLocation.value,
+                            BottomSheetContentType.AddWaypoint -> AddWaypointSheet(tappedLocation.value,
                                 onCreateWaypoint = {
                                     coroutineScope.launch {
                                         viewModel.saveWaypoint(it)
@@ -304,7 +308,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     }
                                 })
 
-                            BottomSheetContentType.AddPolylineAnnotation -> AddPolylineSheet(points = uiState.polyCandidate,
+                            BottomSheetContentType.AddPolylineAnnotation -> AddPolylineSheet(
+                                points = uiState.polyCandidate,
                                 onSave = { polyline ->
                                     coroutineScope.launch {
                                         viewModel.savePolyline(polyline)
@@ -314,7 +319,8 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                     }
                                 })
 
-                            BottomSheetContentType.AddPolygonAnnotation -> AddPolygonSheet(points = uiState.polyCandidate,
+                            BottomSheetContentType.AddPolygonAnnotation -> AddPolygonSheet(
+                                points = uiState.polyCandidate,
                                 onSave = { polygon ->
                                     coroutineScope.launch {
                                         viewModel.savePolygon(polygon)
@@ -362,6 +368,7 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                 Box(modifier = Modifier.fillMaxSize()) {
                     val hapticFeedback = LocalHapticFeedback.current
 
+                    var showUserDialog by remember { mutableStateOf(false) }
                     var mapRotationEnabled = remember {
                         mutableStateOf(false)
                     }
@@ -372,6 +379,28 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                         mutableStateOf(GesturesSettings {
                             rotateEnabled = mapRotationEnabled.value
                         })
+                    }
+
+                    if (showUserDialog) {
+                        activeUserLocation?.let { user ->
+                            AlertDialog(onDismissRequest = { showUserDialog = false },
+                                confirmButton = { /*TODO*/ },
+                                title = { Text(user.userName) },
+                                text = {
+                                    val timeSince =
+                                        Utils.getTimeSinceNow(Instant.parse(user.timestamp))
+                                    Column {
+                                        Text("Latitude: ${user.position.latitude}")
+                                        Text("Longitude: ${user.position.longitude}")
+                                        Text("Last updated: $timeSince ago")
+                                    }
+                                },
+                                dismissButton = {
+                                    TextButton(onClick = { showUserDialog = false }) {
+                                        Text("Close")
+                                    }
+                                })
+                        }
                     }
 
                     MapboxMap(
@@ -479,8 +508,14 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                                                     location.first().latitude()
                                                 }/${location.first().longitude()}"
                                             )
-                                            location.first()
-                                                .let { point -> viewModel.setUserLocation(point) }
+                                            location.first().let { point ->
+                                                val position = Position.fromPoint(point)
+
+                                                viewModel.setUserLocation(point)
+//                                                coroutineScope.launch {
+//                                                    viewModel.broadcastUserLocation(position)
+//                                                }
+                                            }
 
                                         }
 
@@ -538,6 +573,10 @@ fun MapScreen(navController: NavHostController, viewModel: MapViewModel = get())
                             activeCircle = it
                             viewModel.setBottomSheetContentType(BottomSheetContentType.ViewCircleDetail)
                             viewModel.setBottomSheetVisible(true)
+                        })
+                        MapUserLocations(lastLocations, onTapUserLocation = {
+                            activeUserLocation = it
+                            showUserDialog = true
                         })
                     } // End MapboxMap
 
